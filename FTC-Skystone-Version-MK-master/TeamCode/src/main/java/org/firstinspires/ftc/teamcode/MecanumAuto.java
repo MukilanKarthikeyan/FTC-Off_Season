@@ -41,8 +41,11 @@ public class MecanumAuto extends LinearOpMode {
         waitForStart();
         fwd(1);
     }
-    public void fwd(int rev){
+    public void fwd(double rev){//need to change to a distace perameter
         int dist = rev*TICKS;
+        //int tic = (dist/(wheel_diameter))*TICKS;
+        //NOTE: rev = dist/(wheel_diameter)
+
         //Stop and Reset the encoders
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -71,20 +74,59 @@ public class MecanumAuto extends LinearOpMode {
 
         DrivePower(0.0);
     }
-    public void DrivePower(double pow){
+
+    /*
+    sets the power for each wheel
+    inputs range form -1.0 to 1.0
+     */
+    public void DrivePower(double pow) {
         leftFront.setPower(pow);
         leftBack.setPower(pow);
         rightFront.setPower(pow);
         rightBack.setPower(pow);
     }
-    public void rever(int dist){
-
-    }
+    /*
+    the strafe method is for moving on the Horzintal axis reltive to the robot
+     */
     public void strafe(int dist){
         // if dist is positive strafes right, if dist is negative strafes left
     }
 
-    public void drive(int x, int y, double turn) {
+    /*
+    drivePolar method takes in an input of distance, angle, and boolean mainatin orentaion(mainOr)
+    if mainOr is true, then robot does not turn, if false robot turns and moves forward
+    NOTE: since its holonomic, assign an integer to each side of the robot (easer to work with in the future
+    depending on attachments and use a waterfall conditional)
+     */
+    public void drivePolar(double dist, double angle, boolean mainOr, double pow){
+        //Calculate Horizontal Movement
+        double X_move = dist*Cos(angle);
+
+        //Calculate Veritcal movement
+        double Y_move = dist*Sin(angle);
+        //initially we need to test the movemnt by breaking down the movement vector into its x and y components
+
+        //no need to check for refernce angle when maintaing Orentaion, works like graphing in Polar coordinates
+        if(mainOr){
+            drive(X_move);
+            drive(Y_move;
+        }
+        //else statement deals with if you want to turn and drive forward
+        //slightly complicated as we need to accomedate for large turns using reference angles
+        else{
+            turn(angle); // placeholder command, but write the turn command
+            move(dist);
+        }
+    }
+
+    /*
+    the folowing driveMethod is for cartesian coordinates
+    The logic used in this command to determine the power assigned to each motor is the
+    same as the logic for the teleOp code and matches input ranges form controller
+
+    NOTE: Program the TeleOp to be field centric for best use
+     */
+    public void driveXY(int x, int y, double turn) {
         //calculations for the power to be applied to each wheel
         // NOTE: these are what would be used for the telOP inputs form controller
         double leftFrontVal = y + turn + x;
