@@ -1,13 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.hardware.bosch.BNO055IMU;
+import com.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.robotcore.eventloop.opmode.Autonomous;
+import com.robotcore.eventloop.opmode.Disabled;
+import com.robotcore.eventloop.opmode.LinearOpMode;
+import com.robotcore.hardware.DcMotor;
+import com.robotcore.hardware.DcMotorController;
+import com.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
