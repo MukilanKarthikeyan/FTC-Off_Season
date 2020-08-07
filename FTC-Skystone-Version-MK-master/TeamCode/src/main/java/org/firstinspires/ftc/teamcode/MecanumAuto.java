@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.hardware.bosch.BNO055IMU;
-import com.hardware.bosch.JustLoggingAccelerationIntegrator;
-import com.robotcore.eventloop.opmode.Autonomous;
-import com.robotcore.eventloop.opmode.Disabled;
-import com.robotcore.eventloop.opmode.LinearOpMode;
-import com.robotcore.hardware.DcMotor;
-import com.robotcore.hardware.DcMotorController;
-import com.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -33,16 +34,18 @@ public class MecanumAuto extends LinearOpMode {
         //assign each motor
         leftFront = hardwareMap.dcMotor.get("lf");
         rightFront = hardwareMap.dcMotor.get("rf");
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack = hardwareMap.dcMotor.get("lb");
         rightBack = hardwareMap.dcMotor.get("rb");
-        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
         fwd(1);
+        wait(500);
+        DrivePower(0);
     }
     public void fwd(double rev){//need to change to a distace perameter
-        int dist = rev*TICKS;
+        int dist = (int)rev*TICKS;
         //int tic = (dist/(wheel_diameter))*TICKS;
         //NOTE: rev = dist/(wheel_diameter)
 
@@ -100,25 +103,36 @@ public class MecanumAuto extends LinearOpMode {
      */
     public void drivePolar(double dist, double angle, boolean mainOr, double pow){
         //Calculate Horizontal Movement
-        double X_move = dist*Cos(angle);
+        double X_move = dist*Math.cos(angle);
 
         //Calculate Veritcal movement
-        double Y_move = dist*Sin(angle);
+        double Y_move = dist*Math.sin(angle);
         //initially we need to test the movemnt by breaking down the movement vector into its x and y components
 
         //no need to check for refernce angle when maintaing Orentaion, works like graphing in Polar coordinates
         if(mainOr){
             drive(X_move);
-            drive(Y_move;
+            drive(Y_move);
         }
         //else statement deals with if you want to turn and drive forward
         //slightly complicated as we need to accomedate for large turns using reference angles
         else{
             turn(angle); // placeholder command, but write the turn command
-            move(dist);
+            drive(dist);
         }
     }
+    /*
+    placeholer drive method
+    */
+    public void drive(double move){
 
+    }
+    /*
+    placeholder trun method
+    */
+    public void turn(double angle){
+
+    }
     /*
     the folowing driveMethod is for cartesian coordinates
     The logic used in this command to determine the power assigned to each motor is the
