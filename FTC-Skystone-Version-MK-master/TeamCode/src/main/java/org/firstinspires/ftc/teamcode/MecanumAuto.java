@@ -49,17 +49,18 @@ public class MecanumAuto extends LinearOpMode {
         //NOTE: rev = dist/(wheel_diameter)
 
         //Stop and Reset the encoders
+
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //rev is the number of revolutions of the motor(need to change it to distance in meters/inches so it will calculate revs)
         //set the distace goal
-        leftFront.setTargetPosition(dist);
-        leftBack.setTargetPosition(dist);
         rightFront.setTargetPosition(dist);
-        rightBack.setTargetPosition(dist);
+        leftFront.setTargetPosition(-dist);
+        leftBack.setTargetPosition(dist);
+        rightBack.setTargetPosition(-dist);
 
         //change to run to position mode
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -76,6 +77,27 @@ public class MecanumAuto extends LinearOpMode {
 
         DrivePower(0.0);
     }
+    public void turn(int tics){
+        //rev is the number of revolutions of the motor(need to change it to distance in meters/inches so it will calculate revs)
+        //set the distace goal
+        rightFront.setTargetPosition(tics);
+        leftFront.setTargetPosition(-tics);
+        leftBack.setTargetPosition(-tics);
+        rightBack.setTargetPosition(tics);
+
+        //change to run to position mode
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //set power to motors
+        freeDrive(0.3,-0.3,-0.3,0.3);
+        while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack
+                .isBusy()) {
+        }
+        DrivePower(0.0);
+    }
 
     /*
     sets the power for each wheel
@@ -87,7 +109,7 @@ public class MecanumAuto extends LinearOpMode {
         rightFront.setPower(pow);
         rightBack.setPower(pow);
     }
-    public void freeDrive(double rf, double rb, double lf, double lb){
+    public void freeDrive(double rf, double lf,  double lb, double rb){
         rightFront.setPower(rf);
         rightBack.setPower(rb);
         leftFront.setPower(lf);
@@ -141,8 +163,7 @@ public class MecanumAuto extends LinearOpMode {
 
         //no need to check for refernce angle when maintaing Orentaion, works like graphing in Polar coordinates
         if(mainOr){
-            drive(X_move);
-            drive(Y_move);
+            drive(X_move, Y_move)
         }
         //else statement deals with if you want to turn and drive forward
         //slightly complicated as we need to accomedate for large turns using reference angles
@@ -154,8 +175,11 @@ public class MecanumAuto extends LinearOpMode {
     /*
     placeholer drive method
     */
-    public void drive(double move){
-
+    public void drive(double X_move,double Y_move){
+        double Omega1 = X_move + Y_move;//rf
+        double Omega2 = X_move - Y_move;//lf
+        double Omega3 = X_move + Y_move;//lb
+        double Omega4 = X_move - Y_move;//rb
     }
     /*
     placeholder trun method
