@@ -87,10 +87,16 @@ public class MecanumAuto extends LinearOpMode {
         rightFront.setPower(pow);
         rightBack.setPower(pow);
     }
+    public void freeDrive(double rf, double rb, double lf, double lb){
+        rightFront.setPower(rf);
+        rightBack.setPower(rb);
+        leftFront.setPower(lf);
+        leftBack.setPower(lb);
+    }
     /*
     the strafe method is for moving on the Horzintal axis reltive to the robot
      */
-    public void strafe(int rev){
+    public void strafe(int rev, double pow){
         // if dist is positive strafes right, if dist is negative strafes left
         int dist = (int)rev*TICKS;
         //int tic = (dist/(wheel_diameter))*TICKS;
@@ -116,7 +122,6 @@ public class MecanumAuto extends LinearOpMode {
         while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack
                 .isBusy()) {
         }
-
         DrivePower(0.0);
     }
 
