@@ -40,11 +40,10 @@ public class MecanumAuto extends LinearOpMode {
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
-        fwd(1);
-        wait(500);
+        fwd(1, 0.3);
         DrivePower(0);
     }
-    public void fwd(double rev){//need to change to a distace perameter
+    public void fwd(double rev, double pow){//need to change to a distace parameter
         int dist = (int)rev*TICKS;
         //int tic = (dist/(wheel_diameter))*TICKS;
         //NOTE: rev = dist/(wheel_diameter)
@@ -69,7 +68,7 @@ public class MecanumAuto extends LinearOpMode {
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         //set power to motors
-        DrivePower(0.3);
+        DrivePower(pow);
 
         while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack
                 .isBusy()) {
@@ -91,8 +90,34 @@ public class MecanumAuto extends LinearOpMode {
     /*
     the strafe method is for moving on the Horzintal axis reltive to the robot
      */
-    public void strafe(int dist){
+    public void strafe(int rev){
         // if dist is positive strafes right, if dist is negative strafes left
+        int dist = (int)rev*TICKS;
+        //int tic = (dist/(wheel_diameter))*TICKS;
+        //NOTE: rev = dist/(wheel_diameter)
+
+        //rev is the number of revolutions of the motor(need to change it to distance in meters/inches so it will calculate revs)
+        //set the distace goal
+        //a postive rev value strafes right, and a negative rev value strafes left
+        leftFront.setTargetPosition(dist);
+        leftBack.setTargetPosition(-dist);
+        rightFront.setTargetPosition(dist);
+        rightBack.setTargetPosition(-dist);
+
+        //change to run to position mode
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //set power to motors
+        DrivePower(pow);
+
+        while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack
+                .isBusy()) {
+        }
+
+        DrivePower(0.0);
     }
 
     /*
