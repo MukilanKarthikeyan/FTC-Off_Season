@@ -89,7 +89,7 @@ public class MecanumAuto extends LinearOpMode {
         sleep(1000);
 
         */
-        drive(0.3, 1, -1, 1, -1);
+        drive(0.3, 2, 1, 1, -2);
     }
 
     public void testEncoder(int rev){
@@ -158,10 +158,24 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while((Math.abs(rfPos) < Math.abs(rfTics)) && (Math.abs(rbPos) < Math.abs(rbTics)) &&
-                (Math.abs(lfPos) < Math.abs(lfTics)) && (Math.abs(lbPos) < Math.abs(lbTics))){
+        while(rightFront.isBusy() || rightBack.isBusy() || leftFront.isBusy() || leftFront.isBusy()){
 
-            powDrive(rfPow, rbPow, lfPow, lbPow);
+            if((Math.abs(rfPos) < Math.abs(rfTics))){
+                rightFront.setPower(rfPow);
+            }
+            if((Math.abs(rbPos) < Math.abs(rbTics))){
+                rightFront.setPower(rbPow);
+            }
+            if( (Math.abs(lfPos) < Math.abs(lfTics))){
+                rightFront.setPower(lfPow);
+            }
+            if((Math.abs(lbPos) < Math.abs(lbTics))){
+                rightFront.setPower(lbPow);
+            }
+
+            //unable to use the powDrive method beacue i need to be able to control each of the power of the motors independitly which would
+            //require me to write 4 seperate lines of code
+            //powDrive(rfPow, rbPow, lfPow, lbPow);
 
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
@@ -215,6 +229,16 @@ public class MecanumAuto extends LinearOpMode {
         //else statement deals with if you want to turn and drive forward
         //slightly complicated as we need to accomedate for large turns using reference angles
 
+    }
+
+    /*
+    placeholer drive method
+    */
+    public void drive(double X_move,double Y_move){
+        double Omega1 = X_move + Y_move;//rf
+        double Omega2 = X_move - Y_move;//lf
+        double Omega3 = X_move + Y_move;//lb
+        double Omega4 = X_move - Y_move;//rb
     }
 
     /*
