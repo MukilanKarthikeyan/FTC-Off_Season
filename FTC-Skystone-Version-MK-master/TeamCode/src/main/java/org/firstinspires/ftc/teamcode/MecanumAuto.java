@@ -89,11 +89,11 @@ public class MecanumAuto extends LinearOpMode {
         sleep(1000);
 
         */
-        testEncoder(1);
+        move_Y(1,0.1);
     }
 
     public void testEncoder(int rev){
-        int tics = TICKS*(-rev);
+        int tics = TICKS*(rev);
         telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
         telemetry.update();
 
@@ -104,7 +104,7 @@ public class MecanumAuto extends LinearOpMode {
         int rfPos = rightFront.getCurrentPosition();
 
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while(rfPos > tics){
+        while(Math.abs(rfPos) < Math.abs(tics)){
             rightFront.setPower(0.1);
             rfPos = rightFront.getCurrentPosition();
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
@@ -114,34 +114,58 @@ public class MecanumAuto extends LinearOpMode {
 
     }
 
-    public void fwd(double rev, double pow){//need to change to a distace parameter
-        int dist = (int)rev*TICKS;
+    public void move_Y(double rev, double pow){//need to change to a distace parameter
+        int tics = (int)rev*TICKS;
         //int tic = (dist/(wheel_diameter))*TICKS;
         //NOTE: rev = dist/(wheel_diameter)
 
+        telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
+        telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition()));
+        telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition()));
+        telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition()));
+        telemetry.update();
 
-        //rev is the number of revolutions of the motor(need to change it to distance in meters/inches so it will calculate revs)
-        //set the distace goal
-        rightFront.setTargetPosition(-dist);
-        leftFront.setTargetPosition(dist);
-        leftBack.setTargetPosition(dist);
-        rightBack.setTargetPosition(-dist);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
 
-        //change to run to position mode
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
+
+        rightFront.setTargetPosition(tics);
+        rightBack.setTargetPosition(tics);
+        leftFront.setTargetPosition(-tics);
+        leftBack.setTargetPosition(-tics);
+
+        int rfPos = rightFront.getCurrentPosition();
+        int rbPos = rightBack.getCurrentPosition();
+        int lfPos = leftFront.getCurrentPosition();
+        int lbPos = leftBack.getCurrentPosition();
+
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        //set power to motors
-        //DrivePower(pow);
-        freeDrive(0,0,0,0);
+        while((Math.abs(rfPos) < Math.abs(tics)) && (Math.abs(rbPos) < Math.abs(tics)) &&
+                (Math.abs(lfPos) < Math.abs(tics)) && (Math.abs(lbPos) < Math.abs(tics))){
 
-        while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack
-                .isBusy()) {
+            freeDrive(-pow, pow, pow, -pow);
+
+            rfPos = rightFront.getCurrentPosition();
+            rbPos = rightBack.getCurrentPosition();
+            lfPos = leftFront.getCurrentPosition();
+            lbPos = leftBack.getCurrentPosition();
+
+            telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
+            telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition()));
+            telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition()));
+            telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition()));
+            telemetry.update();
         }
-
-        DrivePower(0.0);
     }
 
     public void turn(int tics, boolean turn){
