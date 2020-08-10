@@ -89,7 +89,7 @@ public class MecanumAuto extends LinearOpMode {
         sleep(1000);
 
         */
-        move_Y(1,0.1);
+        drive(0.3, 1, -1, 1, -1);
     }
 
     public void testEncoder(int rev){
@@ -114,8 +114,16 @@ public class MecanumAuto extends LinearOpMode {
 
     }
 
-    public void move_Y(double rev, double pow){//need to change to a distace parameter
-        int tics = (int)rev*TICKS;
+    public void drive(double pow, double rfRev, double rbRev, double lfRev,double lbRev){//need to change to a distace parameter
+        int rfTics = (int)rfRev*TICKS;
+        int rbTics = (int)rbRev*TICKS;
+        int lfTics = (int)lfRev*TICKS;
+        int lbTics = (int)lbRev*TICKS;
+
+        double rfPow = (rfRev*pow)/(double)Math.abs(rfRev);
+        double rbPow = (rbRev*pow)/(double)Math.abs(rbRev);
+        double lfPow = (lfRev*pow)/(double)Math.abs(lfRev);
+        double lbPow = (lbRev*pow)/(double)Math.abs(lbRev);
         //int tic = (dist/(wheel_diameter))*TICKS;
         //NOTE: rev = dist/(wheel_diameter)
 
@@ -135,10 +143,10 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
         leftBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
 
-        rightFront.setTargetPosition(tics);
-        rightBack.setTargetPosition(tics);
-        leftFront.setTargetPosition(-tics);
-        leftBack.setTargetPosition(-tics);
+        rightFront.setTargetPosition(rfTics);
+        rightBack.setTargetPosition(rbTics);
+        leftFront.setTargetPosition(lfTics);
+        leftBack.setTargetPosition(lbTics);
 
         int rfPos = rightFront.getCurrentPosition();
         int rbPos = rightBack.getCurrentPosition();
@@ -150,10 +158,10 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while((Math.abs(rfPos) < Math.abs(tics)) && (Math.abs(rbPos) < Math.abs(tics)) &&
-                (Math.abs(lfPos) < Math.abs(tics)) && (Math.abs(lbPos) < Math.abs(tics))){
+        while((Math.abs(rfPos) < Math.abs(rfTics)) && (Math.abs(rbPos) < Math.abs(rbTics)) &&
+                (Math.abs(lfPos) < Math.abs(lfTics)) && (Math.abs(lbPos) < Math.abs(lbTics))){
 
-            freeDrive(-pow, pow, pow, -pow);
+            powDrive(rfPow, rbPow, lfPow, lbPow);
 
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
@@ -168,32 +176,6 @@ public class MecanumAuto extends LinearOpMode {
         }
     }
 
-    public void turn(int tics, boolean turn){
-        //rev is the number of revolutions of the motor(need to change it to distance in meters/inches so it will calculate revs)
-        //set the distace goal
-        rightFront.setTargetPosition(tics);
-        leftFront.setTargetPosition(tics);
-        leftBack.setTargetPosition(tics);
-        rightBack.setTargetPosition(tics);
-
-        //change to run to position mode
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        //set power to motors
-        if(turn){
-            freeDrive(0.3,-0.3,-0.3,0.3);}
-        else{
-            freeDrive(-0.3,0.3,0.3,-0.3);
-        }
-        while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack
-                .isBusy()) {
-        }
-        DrivePower(0.0);
-    }
-
     /*
     sets the power for each wheel
     inputs range form -1.0 to 1.0
@@ -205,42 +187,11 @@ public class MecanumAuto extends LinearOpMode {
         rightBack.setPower(pow);
     }
 
-    public void freeDrive(double rf, double lf,  double lb, double rb){
+    public void powDrive(double rf, double lf,  double lb, double rb){
         rightFront.setPower(rf);
         leftFront.setPower(lf);
         rightBack.setPower(rb);
         leftBack.setPower(lb);
-    }
-    /*
-    the strafe method is for moving on the Horzintal axis reltive to the robot
-     */
-    public void strafe(int rev, double pow){
-        // if dist is positive strafes right, if dist is negative strafes left
-        int dist = (int)rev*TICKS;
-        //int tic = (dist/(wheel_diameter))*TICKS;
-        //NOTE: rev = dist/(wheel_diameter)
-
-        //rev is the number of revolutions of the motor(need to change it to distance in meters/inches so it will calculate revs)
-        //set the distace goal
-        //a postive rev value strafes right, and a negative rev value strafes left
-        leftFront.setTargetPosition(dist);
-        leftBack.setTargetPosition(-dist);
-        rightFront.setTargetPosition(dist);
-        rightBack.setTargetPosition(-dist);
-
-        //change to run to position mode
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        //set power to motors
-        freeDrive(pow,pow,-pow,-pow);
-
-        while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack
-                .isBusy()) {
-        }
-        DrivePower(0.0);
     }
 
     /*
@@ -264,16 +215,6 @@ public class MecanumAuto extends LinearOpMode {
         //else statement deals with if you want to turn and drive forward
         //slightly complicated as we need to accomedate for large turns using reference angles
 
-    }
-
-    /*
-    placeholer drive method
-    */
-    public void drive(double X_move,double Y_move){
-        double Omega1 = X_move + Y_move;//rf
-        double Omega2 = X_move - Y_move;//lf
-        double Omega3 = X_move + Y_move;//lb
-        double Omega4 = X_move - Y_move;//rb
     }
 
     /*
