@@ -158,19 +158,90 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while(rightFront.isBusy() || rightBack.isBusy() || leftFront.isBusy() || leftFront.isBusy()){
+        while((Math.abs(rfPos) < Math.abs(rfTics)) && (Math.abs(rbPos) < Math.abs(rbTics)) &&
+                (Math.abs(lfPos) < Math.abs(lfTics)) && (Math.abs(lbPos) < Math.abs(lbTics))){
+
+            powDrive(rfPow, rbPow, lfPow, lbPow);
+
+            rfPos = rightFront.getCurrentPosition();
+            rbPos = rightBack.getCurrentPosition();
+            lfPos = leftFront.getCurrentPosition();
+            lbPos = leftBack.getCurrentPosition();
+
+            telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
+            telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition()));
+            telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition()));
+            telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition()));
+            telemetry.update();
+        }
+    }
+
+    public void freeDrive(double pow, double rfRev, double rbRev, double lfRev,double lbRev){//need to change to a distace parameter
+
+        //so for the parameters are the number of revolutions for each motor, but with future testing and aditional methods
+        //which will make this freeDrive method a helper one, we can program based on distance rather than revolutions
+        //currently distance is not fesibel due to inconsistancies(wheel slipage) and drifting(hardware issue)
+        int rfTics = (int)rfRev*TICKS;
+        int rbTics = (int)rbRev*TICKS;
+        int lfTics = (int)lfRev*TICKS;
+        int lbTics = (int)lbRev*TICKS;
+
+        //to calculate the sign/diriction of the motor, yes its a long calculation there is posibiltiy for simplicfication
+        //but currently we have not found a better solution
+        double rfPow = (rfRev*pow)/(double)Math.abs(rfRev);
+        double rbPow = (rbRev*pow)/(double)Math.abs(rbRev);
+        double lfPow = (lfRev*pow)/(double)Math.abs(lfRev);
+        double lbPow = (lbRev*pow)/(double)Math.abs(lbRev);
+        //int tic = (dist/(wheel_diameter))*TICKS;
+        //NOTE: rev = dist/(wheel_diameter)
+
+        telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
+        telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition()));
+        telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition()));
+        telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition()));
+        telemetry.update();
+
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+
+        rightFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
+
+        rightFront.setTargetPosition(rfTics);
+        rightBack.setTargetPosition(rbTics);
+        leftFront.setTargetPosition(lfTics);
+        leftBack.setTargetPosition(lbTics);
+
+        int rfPos = rightFront.getCurrentPosition();
+        int rbPos = rightBack.getCurrentPosition();
+        int lfPos = leftFront.getCurrentPosition();
+        int lbPos = leftBack.getCurrentPosition();
+
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //while loop must use || because when using && if a revolution of 0 is given to one motor, the statement
+        //short ciruits and stops, but the || allows to run each motor at individual revolutions
+        while((Math.abs(rfPos) < Math.abs(rfTics)) || (Math.abs(rbPos) < Math.abs(rbTics))||
+                (Math.abs(lfPos) < Math.abs(lfTics))|| (Math.abs(lbPos) < Math.abs(lbTics))){
 
             if((Math.abs(rfPos) < Math.abs(rfTics))){
                 rightFront.setPower(rfPow);
             }
             if((Math.abs(rbPos) < Math.abs(rbTics))){
-                rightFront.setPower(rbPow);
+                rightBack.setPower(rbPow);
             }
-            if( (Math.abs(lfPos) < Math.abs(lfTics))){
-                rightFront.setPower(lfPow);
+            if((Math.abs(lfPos) < Math.abs(lfTics))){
+                leftFront.setPower(lfPow);
             }
             if((Math.abs(lbPos) < Math.abs(lbTics))){
-                rightFront.setPower(lbPow);
+                leftBack.setPower(lbPow);
             }
 
             //unable to use the powDrive method beacue i need to be able to control each of the power of the motors independitly which would
@@ -189,6 +260,7 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.update();
         }
     }
+
 
     /*
     sets the power for each wheel
