@@ -114,6 +114,16 @@ public class MecanumAuto extends LinearOpMode {
 
     }
 
+    /**
+     * sets the number of revolutions for each motor and the speed
+     * limitations: the number of revolutions can not be 0 for any given motor, and all motors can not have differnt number of revolutions
+     * Mukilan K. 2020.08.10
+     * @param pow: takes in the power that each motor will be set to
+     * @param rfRev: number of revolutions for the right front motor
+     * @param rbRev: number of revolutions for the right back motor
+     * @param lfRev: number of revolutions for the left front motor
+     * @param lbRev: number of revolutions for the left back motor
+     */
     public void drive(double pow, double rfRev, double rbRev, double lfRev,double lbRev){//need to change to a distace parameter
         int rfTics = (int)rfRev*TICKS;
         int rbTics = (int)rbRev*TICKS;
@@ -176,8 +186,20 @@ public class MecanumAuto extends LinearOpMode {
         }
     }
 
-    public void freeDrive(double pow, double rfRev, double rbRev, double lfRev,double lbRev){//need to change to a distace parameter
-
+    /**
+     * Mukilan K. 2020.08.11
+     * free drive allows control over direction and number of rotations of each indivitual motor
+     * also fixed limitations form previous drive method which required each motor to spin the same non zero amount of times
+     * would always spin the least number of revolution int he parameter (previous method will be replaced once freeDrive is tested)
+     *
+     * @param pow: takes in the power that each motor will be set to
+     * @param rfRev: number of revolutions for the right front motor
+     * @param rbRev: number of revolutions for the right back motor
+     * @param lfRev: number of revolutions for the left front motor
+     * @param lbRev: number of revolutions for the left back motor
+     */
+    public void freeDrive(double pow, double rfRev, double rbRev, double lfRev,double lbRev){
+        //need to change to a distace parameter
         //so for the parameters are the number of revolutions for each motor, but with future testing and aditional methods
         //which will make this freeDrive method a helper one, we can program based on distance rather than revolutions
         //currently distance is not fesibel due to inconsistancies(wheel slipage) and drifting(hardware issue)
@@ -262,7 +284,7 @@ public class MecanumAuto extends LinearOpMode {
     }
 
 
-    /*
+    /**
     sets the power for each wheel
     inputs range form -1.0 to 1.0
      */
@@ -273,14 +295,23 @@ public class MecanumAuto extends LinearOpMode {
         rightBack.setPower(pow);
     }
 
-    public void powDrive(double rf, double lf,  double lb, double rb){
+    /**
+     * takes in a specfic speed for each individutal motor
+     * Mukilan K. 2020.08.07
+     *
+     * @param rf: right front motor power
+     * @param rb: right back motor power
+     * @param lf: left front motor power
+     * @param lb: left back motor power
+     */
+    public void powDrive(double rf, double rb, double lf,  double lb){
         rightFront.setPower(rf);
         leftFront.setPower(lf);
         rightBack.setPower(rb);
         leftBack.setPower(lb);
     }
 
-    /*
+    /**
     drivePolar method takes in an input of distance, angle, and boolean mainatin orentaion(mainOr)
     if mainOr is true, then robot does not turn, if false robot turns and moves forward
     NOTE: since its holonomic, assign an integer to each side of the robot (easer to work with in the future
