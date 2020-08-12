@@ -283,6 +283,39 @@ public class MecanumAuto extends LinearOpMode {
         }
     }
 
+    //Turn method to be written after studying the IMU, first work on robot motion
+    /**
+     * if edge is 0 then it pivots about the center
+     * for edges 1-4
+     * this pivots on the midpoint of the specifide edge
+     *
+     * @param angle: this method is not motor encoder based, must write it based on an IMU PID loop
+     * @param edge: 0 is center, side 1 is the front, sides are labled clockwise
+     * @param pow: if positive -> anitclockwise, if pow is regative -> clockwise
+     */
+    public void turn(double angle, int edge, double pow){
+        double  curAng =0;
+        double error = angle - curAng;
+        pow = (angle*pow)/(Math.abs(angle));
+        switch(edge){
+            case 0:
+                powDrive(pow, pow, pow, pow);
+                break;
+            case 1:
+                powDrive(0.0, pow, 0.0, pow);
+                break;
+            case 2:
+                powDrive(0.0, 0.0, pow, pow);
+                break;
+            case 3:
+                powDrive(pow, 0.0, pow, 0.0);
+                break;
+            case 4:
+                powDrive(pow, pow, 0.0, 0.0);
+                break;
+        }
+
+    }
 
     /**
     sets the power for each wheel
