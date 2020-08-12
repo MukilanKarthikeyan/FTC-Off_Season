@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -18,7 +19,7 @@ import java.util.Arrays;
 @Autonomous
 public class MecanumAuto extends LinearOpMode {
 
-    DcMotor rightFront = null, rightBack = null, leftFront = null, ,leftBack = null;
+    DcMotor rightFront = null, rightBack = null, leftFront = null, leftBack = null;
 
     BNO055IMU imu;
     Orientation angles;
@@ -35,10 +36,6 @@ public class MecanumAuto extends LinearOpMode {
         rightBack = hardwareMap.dcMotor.get("rb");
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameter.mmode = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled = false;BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
@@ -46,52 +43,53 @@ public class MecanumAuto extends LinearOpMode {
         parameters.loggingTag = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
-
-        freeDrive(0.6,-0.6,-0.6,0.6);
+        powDrive(0.6,-0.6,-0.6,0.6);
         sleep(1000);
 
-        freeDrive(0.0,0.0,0.0,0.0);
+        powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
         //backward
-        freeDrive(-0.6,0.6,0.6,-0.6);
+        powDrive(-0.6,0.6,0.6,-0.6);
         sleep(1000);
 
-        freeDrive(0.0,0.0,0.0,0.0);
+        powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        freeDrive(0.6,0.6,-0.6,-0.6);
+        powDrive(0.6,0.6,-0.6,-0.6);
         sleep(1000);
 
-        freeDrive(0.0,0.0,0.0,0.0);
+        powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        freeDrive(-0.6,-0.6,0.6,0.6);
+        powDrive(-0.6,-0.6,0.6,0.6);
         sleep(1000);
 
-        freeDrive(0.0,0.0,0.0,0.0);
+        powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        freeDrive(-0.6,-0.6,-0.6,-0.6);
+        powDrive(-0.6,-0.6,-0.6,-0.6);
         sleep(1000);
 
-        freeDrive(0.0,0.0,0.0,0.0);
+        powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        freeDrive(0.6,0.6,0.6,0.6);
+        powDrive(0.6,0.6,0.6,0.6);
         sleep(1000);
 
-        freeDrive(0.0,0.0,0.0,0.0);
+        powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        freeDrive(0.6,0.0,0.6,0.0);
+        powDrive(0.6,0.0,0.6,0.0);
         sleep(1000);
 
-        freeDrive(0.0,0.0,0.0,0.0);
+        powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        freeDrive(0.0,0.6,0.0,0.6);
+        powDrive(0.0,0.6,0.0,0.6);
         sleep(1000);
 
 
@@ -305,18 +303,16 @@ public class MecanumAuto extends LinearOpMode {
     public void turn(double target,boolean sideCon, int edge, double pow){
         double  curAng = 90;
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        currentPos = Math.abs(angles.firstAngle);
+        double currentPos = Math.abs(angles.firstAngle);
         double error = curAng - target;
         pow = (target*pow)/(Math.abs(target));
 
         double i = 0;
 
         double initialPos = angles.firstAngle;
-        double currentPos = initialPos;
-
 
         while (opModeIsActive() && ((Math.abs(target - Math.abs(currentPos))) > 1)) {
-            initTime = getRuntime();
+            //initTime = getRuntime();
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             currentPos = Math.abs(angles.firstAngle);
 
@@ -378,8 +374,8 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     /**
-    sets the power for each wheel
-    inputs range form -1.0 to 1.0
+     sets the power for each wheel
+     inputs range form -1.0 to 1.0
      */
     public void DrivePower(double pow) {
         leftFront.setPower(pow);
@@ -405,10 +401,10 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     /**
-    drivePolar method takes in an input of distance, angle, and boolean mainatin orentaion(mainOr)
-    if mainOr is true, then robot does not turn, if false robot turns and moves forward
-    NOTE: since its holonomic, assign an integer to each side of the robot (easer to work with in the future
-    depending on attachments and use a waterfall conditional)
+     drivePolar method takes in an input of distance, angle, and boolean mainatin orentaion(mainOr)
+     if mainOr is true, then robot does not turn, if false robot turns and moves forward
+     NOTE: since its holonomic, assign an integer to each side of the robot (easer to work with in the future
+     depending on attachments and use a waterfall conditional)
      */
     public void drivePolar(double dist, double angle, boolean mainOr, double pow){
         //Calculate Horizontal Movement
@@ -420,7 +416,7 @@ public class MecanumAuto extends LinearOpMode {
 
         //no need to check for refernce angle when maintaing Orentaion, works like graphing in Polar coordinates
         if(mainOr){
-            drive(X_move, Y_move);
+            teLogic(X_move, Y_move);
         }
         //else statement deals with if you want to turn and drive forward
         //slightly complicated as we need to accomedate for large turns using reference angles
