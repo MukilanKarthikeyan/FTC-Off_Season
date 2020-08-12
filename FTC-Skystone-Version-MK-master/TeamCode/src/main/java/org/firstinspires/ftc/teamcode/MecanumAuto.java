@@ -47,25 +47,26 @@ public class MecanumAuto extends LinearOpMode {
         imu.initialize(parameters);
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
-        powDrive(0.6,-0.6,-0.6,0.6);
-        sleep(1000);
-
-        powDrive(0.0,0.0,0.0,0.0);
-        sleep(500);
-        //backward
-        powDrive(-0.6,0.6,0.6,-0.6);
-        sleep(1000);
-
-        powDrive(0.0,0.0,0.0,0.0);
-        sleep(500);
-
+        /*
         powDrive(0.6,0.6,-0.6,-0.6);
         sleep(1000);
 
         powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
-
+        //backward
         powDrive(-0.6,-0.6,0.6,0.6);
+        sleep(1000);
+
+        powDrive(0.0,0.0,0.0,0.0);
+        sleep(500);
+
+        powDrive(-0.6,0.6,-0.6,0.6);
+        sleep(1000);
+
+        powDrive(0.0,0.0,0.0,0.0);
+        sleep(500);
+
+        powDrive(0.6,-0.6,0.6,-0.6);
         sleep(1000);
 
         powDrive(0.0,0.0,0.0,0.0);
@@ -83,17 +84,17 @@ public class MecanumAuto extends LinearOpMode {
         powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        powDrive(0.6,0.0,0.6,0.0);
+        powDrive(0.0,-0.6,0.6,0.0);
         sleep(1000);
 
         powDrive(0.0,0.0,0.0,0.0);
         sleep(500);
 
-        powDrive(0.0,0.6,0.0,0.6);
+        powDrive(0.0,0.6,-0.6,0.0);
         sleep(1000);
+*/
 
-
-        //drive(0.3, 2, 1, 1, -2);
+        freeDrive(0.3, 2, 0, 0, -2);
     }
 
     public void testEncoder(int rev){
