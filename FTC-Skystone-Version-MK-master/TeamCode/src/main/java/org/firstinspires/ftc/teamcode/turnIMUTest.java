@@ -28,6 +28,7 @@ public class turnIMUTest extends LinearOpMode {
     DcMotor leftBack;
     DcMotor rightBack;
 
+
     public void runOpMode() throws InterruptedException {
 
         leftFront = hardwareMap.get(DcMotor.class, "lf");
@@ -42,11 +43,15 @@ public class turnIMUTest extends LinearOpMode {
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
         parameters.loggingEnabled = true;
+        parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.loggingTag = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
+
+        telemetry.addData("Mode", "calibrating...");
+        telemetry.update();
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
         waitForStart();
