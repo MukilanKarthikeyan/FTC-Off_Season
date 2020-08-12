@@ -48,8 +48,7 @@ public class MecanumAuto extends LinearOpMode {
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
-        //forward
-        /*
+
         freeDrive(0.6,-0.6,-0.6,0.6);
         sleep(1000);
 
@@ -95,8 +94,8 @@ public class MecanumAuto extends LinearOpMode {
         freeDrive(0.0,0.6,0.0,0.6);
         sleep(1000);
 
-        */
-        drive(0.3, 2, 1, 1, -2);
+
+        //drive(0.3, 2, 1, 1, -2);
     }
 
     public void testEncoder(int rev){
@@ -298,50 +297,83 @@ public class MecanumAuto extends LinearOpMode {
      * however with these cases, if the boolean sideCon is true, it pivots on midpoint of edges,
      * if false pivots on one of the wheels (starting form right front wheel and going clockwise)
      *
-     * @param angle: this method is not motor encoder based, must write it based on an IMU PID loop
+     * @param target: if positive: clockwise if negative: counterclockwise
+     *             this method is not motor encoder based, must write it based on an IMU PID loop
      * @param edge: 0 is center, side 1 is the front, sides are labled clockwise
      * @param pow: if positive -> anitclockwise, if pow is regative -> clockwise
      */
-    public void turn(double angle,boolean sideCon, int edge, double pow){
-        double  curAng =0;
-        double error = angle - curAng;
-        pow = (angle*pow)/(Math.abs(angle));
+    public void turn(double target,boolean sideCon, int edge, double pow){
+        double  curAng = 90;
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        currentPos = Math.abs(angles.firstAngle);
+        double error = curAng - target;
+        pow = (target*pow)/(Math.abs(target));
 
-        if(sideCon) {
-            switch (edge) {
-                case 0:
-                    powDrive(pow, pow, pow, pow);
-                    break;
-                case 1:
-                    powDrive(0.0, pow, 0.0, pow);
-                    break;
-                case 2:
-                    powDrive(0.0, 0.0, pow, pow);
-                    break;
-                case 3:
-                    powDrive(pow, 0.0, pow, 0.0);
-                    break;
-                case 4:
-                    powDrive(pow, pow, 0.0, 0.0);
-                    break;
-            }
-        }
-        else{
-            switch(edge){
-                case 1:
-                    powDrive(0.0, pow, pow, pow);
-                    break;
-                case 2:
-                    powDrive(pow,0.0,pow,pow);
-                    break;
-                case 3:
-                    powDrive(pow, pow,0.0, pow);
-                    break;
-                case 4:
-                    powDrive(pow, pow, pow, 0.0);
-                    break;
+        double i = 0;
 
+        double initialPos = angles.firstAngle;
+        double currentPos = initialPos;
+
+
+        while (opModeIsActive() && ((Math.abs(target - Math.abs(currentPos))) > 1)) {
+            initTime = getRuntime();
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            currentPos = Math.abs(angles.firstAngle);
+
+
+
+            double power = Range.clip((Math.abs((currentPos - target) / (100.0)) + i), .3, .7);
+
+            telemetry.addData("Current Position: ", currentPos);
+            telemetry.addData("Distance to go: ", (Math.abs(target - Math.abs(currentPos))));
+            telemetry.update();
+
+            if(sideCon) {
+                switch (edge) {
+                    case 0:
+                        powDrive(pow, pow, pow, pow);
+                        break;
+                    case 1:
+                        powDrive(0.0, pow, 0.0, pow);
+                        break;
+                    case 2:
+                        powDrive(0.0, 0.0, pow, pow);
+                        break;
+                    case 3:
+                        powDrive(pow, 0.0, pow, 0.0);
+                        break;
+                    case 4:
+                        powDrive(pow, pow, 0.0, 0.0);
+                        break;
+                }
             }
+            else{
+                switch(edge){
+                    case 1:
+                        powDrive(0.0, pow, pow, pow);
+                        break;
+                    case 2:
+                        powDrive(pow,0.0,pow,pow);
+                        break;
+                    case 3:
+                        powDrive(pow, pow,0.0, pow);
+                        break;
+                    case 4:
+                        powDrive(pow, pow, pow, 0.0);
+                        break;
+
+                }
+            }
+
+            /*
+            deltaTime = getRuntime() - initTime;
+
+            if (Math.abs(currentPos - target) < 30)
+                i += .01 * Math.abs(currentPos - target) * deltaTime;
+
+            if (i > 0.3) {
+                i = 0.3;
+            }*/
         }
     }
 
