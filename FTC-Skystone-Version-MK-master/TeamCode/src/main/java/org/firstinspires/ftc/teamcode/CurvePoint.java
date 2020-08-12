@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.teamcode.Point;
-
+@Disabled
 public class CurvePoint {
     public double x;
     public double y;

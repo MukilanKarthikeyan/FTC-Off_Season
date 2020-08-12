@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import java.util.Arrays;
-
+@Disabled
 public class MecanumDrive  {
     private final LinearOpMode opMode;
     DcMotor leftFront = null;

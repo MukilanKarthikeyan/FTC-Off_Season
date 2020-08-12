@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import java.util.Arrays;
 @TeleOp
+@Disabled
 public class MecanumPooja extends LinearOpMode {
     DcMotor leftFront = null;
     DcMotor rightFront = null;
