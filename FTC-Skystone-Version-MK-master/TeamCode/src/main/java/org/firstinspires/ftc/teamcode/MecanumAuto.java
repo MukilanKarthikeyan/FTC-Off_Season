@@ -18,13 +18,11 @@ import java.util.Arrays;
 @Autonomous
 public class MecanumAuto extends LinearOpMode {
 
-    DcMotor leftFront = null;
-    DcMotor rightFront = null;
-    DcMotor leftBack = null;
-    DcMotor rightBack = null;
+    DcMotor rightFront = null, rightBack = null, leftFront = null, ,leftBack = null;
 
     BNO055IMU imu;
     Orientation angles;
+    double globAng;
 
     private final int TICKS = 1120;
 
@@ -36,10 +34,19 @@ public class MecanumAuto extends LinearOpMode {
         leftBack = hardwareMap.dcMotor.get("lb");
         rightBack = hardwareMap.dcMotor.get("rb");
 
-        waitForStart();
-        //fwd(1, 0.3);
-        //DrivePower(0);
-        //strafe(1,0.3);
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameter.mmode = BNO055IMU.SensorMode.IMU;
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.loggingEnabled = false;BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
         //forward
         /*
@@ -288,33 +295,54 @@ public class MecanumAuto extends LinearOpMode {
      * if edge is 0 then it pivots about the center
      * for edges 1-4
      * this pivots on the midpoint of the specifide edge
+     * however with these cases, if the boolean sideCon is true, it pivots on midpoint of edges,
+     * if false pivots on one of the wheels (starting form right front wheel and going clockwise)
      *
      * @param angle: this method is not motor encoder based, must write it based on an IMU PID loop
      * @param edge: 0 is center, side 1 is the front, sides are labled clockwise
      * @param pow: if positive -> anitclockwise, if pow is regative -> clockwise
      */
-    public void turn(double angle, int edge, double pow){
+    public void turn(double angle,boolean sideCon, int edge, double pow){
         double  curAng =0;
         double error = angle - curAng;
         pow = (angle*pow)/(Math.abs(angle));
-        switch(edge){
-            case 0:
-                powDrive(pow, pow, pow, pow);
-                break;
-            case 1:
-                powDrive(0.0, pow, 0.0, pow);
-                break;
-            case 2:
-                powDrive(0.0, 0.0, pow, pow);
-                break;
-            case 3:
-                powDrive(pow, 0.0, pow, 0.0);
-                break;
-            case 4:
-                powDrive(pow, pow, 0.0, 0.0);
-                break;
-        }
 
+        if(sideCon) {
+            switch (edge) {
+                case 0:
+                    powDrive(pow, pow, pow, pow);
+                    break;
+                case 1:
+                    powDrive(0.0, pow, 0.0, pow);
+                    break;
+                case 2:
+                    powDrive(0.0, 0.0, pow, pow);
+                    break;
+                case 3:
+                    powDrive(pow, 0.0, pow, 0.0);
+                    break;
+                case 4:
+                    powDrive(pow, pow, 0.0, 0.0);
+                    break;
+            }
+        }
+        else{
+            switch(edge){
+                case 1:
+                    powDrive(0.0, pow, pow, pow);
+                    break;
+                case 2:
+                    powDrive(pow,0.0,pow,pow);
+                    break;
+                case 3:
+                    powDrive(pow, pow,0.0, pow);
+                    break;
+                case 4:
+                    powDrive(pow, pow, pow, 0.0);
+                    break;
+
+            }
+        }
     }
 
     /**
@@ -370,7 +398,7 @@ public class MecanumAuto extends LinearOpMode {
     /*
     placeholer drive method
     */
-    public void drive(double X_move,double Y_move){
+    public void teLogic(double X_move,double Y_move){
         double Omega1 = X_move + Y_move;//rf
         double Omega2 = X_move - Y_move;//lf
         double Omega3 = X_move + Y_move;//lb
