@@ -98,18 +98,16 @@ public class MecanumAuto extends LinearOpMode {
 
 
         freeDrive(0.3, 1, 1, -1, -1);
-        powDrive(0.0,0.0,0.0,0.0);
-        //need to find a way to sleep/ wait with the power to each motor set to 0,
-        // when using powDrive, for some reason the comand is ignored and the previous power is applied
+        brake(400);
+
         freeDrive(0.3,-1,1,-1,1);
-        powDrive(0.0,0.0,0.0,0.0);
+        brake(400);
 
         freeDrive(0.3, -1, -1,1,1);
-        powDrive(0.0,0.0,0.0,0.0);
+        brake(400);
 
         freeDrive(0.3, 1,-1,1,-1);
-        powDrive(0.0,0.0,0.0,0.0);
-
+        brake(400);
     }
 
     //this method can be used to test the encoders in the future in case encoders go out of phase
@@ -204,16 +202,16 @@ public class MecanumAuto extends LinearOpMode {
                 (Math.abs(lfPos) < Math.abs(lfTics))|| (Math.abs(lbPos) < Math.abs(lbTics))){
 
             if((Math.abs(rfPos) < Math.abs(rfTics))){
-                rightFront.setPower(rfPow*(Math.abs(rfTics)-(Math.abs(rfPos) )/Math.abs(rfTics)));
+                rightFront.setPower(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos) )/(double)Math.abs(rfTics)));
             }
             if((Math.abs(rbPos) < Math.abs(rbTics))){
-                rightBack.setPower(rbPow*(Math.abs(rbTics)-(Math.abs(rbPos))/Math.abs(rbTics));
+                rightBack.setPower(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)));
             }
             if((Math.abs(lfPos) < Math.abs(lfTics))){
-                leftFront.setPower(lfPow(Math.abs(lfTics)-(Math.abs(lfPos))/Math.abs(lfTics)));
+                leftFront.setPower(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)));
             }
             if((Math.abs(lbPos) < Math.abs(lbTics))){
-                leftBack.setPower(lbPow(Math.abs(lbTics)-(Math.abs(lbPos))/Math.abs(lbTics)));
+                leftBack.setPower(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)));
             }
 
             //unable to use the powDrive method beacue i need to be able to control each of the power of the motors independitly which would
@@ -239,7 +237,7 @@ public class MecanumAuto extends LinearOpMode {
 
         //stops setting power to the motors after the target position has been reached
         //beffore it used to just stop because the loop was exited
-        brake(10);
+        brake(100);
     }
 
     //Turn method to be written after studying the IMU, first work on robot motion
