@@ -1,0 +1,23 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcom.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcom.robotcore.eventloop.opmode.Autonomous;
+import com.qualcom.robotcore.hardware.DcMotor;
+@Autonomous(name="auto Tutorial")
+public class Javaworkshop extends LinearOpMode{
+    private DcMotor motorLeft=null, motorRight=null;
+
+    public void runOpmode(){
+        motorLeft = hardwareMap.get(motorLeft);
+        motorRight = hardwareMap.get(motorRight);
+
+        motorLeft.setDirection(DcMotor.Direction.REVERSE);
+
+        waitForStart();
+        motorLeft.setMotor(0.3);
+        motorRight.setMotor(0.3);
+        sleep(1000);
+
+
+    }
+}

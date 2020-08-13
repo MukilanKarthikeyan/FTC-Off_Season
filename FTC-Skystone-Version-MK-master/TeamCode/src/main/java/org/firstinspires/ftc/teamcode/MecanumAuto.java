@@ -91,10 +91,21 @@ public class MecanumAuto extends LinearOpMode {
         sleep(500);
 
         powDrive(0.0,0.6,-0.6,0.0);
-        sleep(1000);
-*/
+        sleep(1000);*/
 
-        freeDrive(0.3, 2, 0, 0, -2);
+
+        freeDrive(0.3, 1, 1, -1, -1);
+        powDrive(0.0,0.0,0.0,0.0);
+
+        freeDrive(0.3,-1,1,-1,1);
+        powDrive(0.0,0.0,0.0,0.0);
+
+        freeDrive(0.3, -1, -1,1,1);
+        powDrive(0.0,0.0,0.0,0.0);
+
+        freeDrive(0.3, 1,-1,1,-1);
+        powDrive(0.0,0.0,0.0,0.0);
+
     }
 
     public void testEncoder(int rev){
@@ -208,10 +219,10 @@ public class MecanumAuto extends LinearOpMode {
         //so for the parameters are the number of revolutions for each motor, but with future testing and aditional methods
         //which will make this freeDrive method a helper one, we can program based on distance rather than revolutions
         //currently distance is not fesibel due to inconsistancies(wheel slipage) and drifting(hardware issue)
-        int rfTics = (int)rfRev*TICKS;
-        int rbTics = (int)rbRev*TICKS;
-        int lfTics = (int)lfRev*TICKS;
-        int lbTics = (int)lbRev*TICKS;
+        int rfTics = (int)(rfRev*TICKS);
+        int rbTics = (int)(rbRev*TICKS);
+        int lfTics = (int)(lfRev*TICKS);
+        int lbTics = (int)(lbRev*TICKS);
 
         //to calculate the sign/diriction of the motor, yes its a long calculation there is posibiltiy for simplicfication
         //but currently we have not found a better solution
