@@ -96,7 +96,7 @@ public class MecanumAuto extends LinearOpMode {
         powDrive(0.0,0.6,-0.6,0.0);
         sleep(1000);*/
 
-
+        /*
         freeDrive(0.3, 1, 1, -1, -1);
         brake(400);
 
@@ -108,6 +108,8 @@ public class MecanumAuto extends LinearOpMode {
 
         freeDrive(0.3, 1,-1,1,-1);
         brake(400);
+        */
+        turn(90, true, 1,0.3);
     }
 
     //this method can be used to test the encoders in the future in case encoders go out of phase
@@ -169,6 +171,9 @@ public class MecanumAuto extends LinearOpMode {
         telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition())+"target: "+String.format("%d", lfTics));
         telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition())+"target: "+String.format("%d", lbTics));
         telemetry.update();
+
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        double initPos = Math.abs(angles.firstAngle);
 
         //set to RUN_USING_ENCODERS before setting target postion
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -238,6 +243,16 @@ public class MecanumAuto extends LinearOpMode {
         //stops setting power to the motors after the target position has been reached
         //beffore it used to just stop because the loop was exited
         brake(100);
+
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        double endAng = Math.abs(angles.firstAngle);
+        if((endAng-intAng)>0){
+            turn(endAng-intAng, false, 0, 0.3);
+        }
+        else{
+            turn(intAng-endAng, true, 0, 0.3);
+        }
+
     }
 
     //Turn method to be written after studying the IMU, first work on robot motion
@@ -258,7 +273,7 @@ public class MecanumAuto extends LinearOpMode {
         double  curAng = 90;
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double currentPos = Math.abs(angles.firstAngle);
-        double error = curAng - target;
+        //double error = curAng - target;
         pow = (target*pow)/(Math.abs(target));
 
         double i = 0;
@@ -309,7 +324,6 @@ public class MecanumAuto extends LinearOpMode {
                     case 4:
                         powDrive(pow, pow, pow, 0.0);
                         break;
-
                 }
             }
 
