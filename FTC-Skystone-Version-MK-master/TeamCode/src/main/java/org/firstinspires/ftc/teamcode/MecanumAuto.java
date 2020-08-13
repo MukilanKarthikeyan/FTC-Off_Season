@@ -29,11 +29,13 @@ public class MecanumAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        //assign each motor
+        //assign each motor to the port in config
         leftFront = hardwareMap.dcMotor.get("lf");
         rightFront = hardwareMap.dcMotor.get("rf");
         leftBack = hardwareMap.dcMotor.get("lb");
         rightBack = hardwareMap.dcMotor.get("rb");
+
+
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -43,6 +45,7 @@ public class MecanumAuto extends LinearOpMode {
         parameters.loggingTag = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
+        // initializes the IMU
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
@@ -96,7 +99,8 @@ public class MecanumAuto extends LinearOpMode {
 
         freeDrive(0.3, 1, 1, -1, -1);
         powDrive(0.0,0.0,0.0,0.0);
-
+        //need to find a way to sleep/ wait with the power to each motor set to 0,
+        // when using powDrive, for some reason the comand is ignored and the previous power is applied
         freeDrive(0.3,-1,1,-1,1);
         powDrive(0.0,0.0,0.0,0.0);
 
@@ -161,17 +165,20 @@ public class MecanumAuto extends LinearOpMode {
         //int tic = (dist/(wheel_diameter))*TICKS;
         //NOTE: rev = dist/(wheel_diameter)
 
-        telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
-        telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition()));
-        telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition()));
-        telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition()));
+        telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())+"target: "+String.format("%d", rfTics));
+        telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition())+"target: "+String.format("%d", rbTics));
+        telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition())+"target: "+String.format("%d", lfTics));
+        telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition())+"target: "+String.format("%d", lbTics));
         telemetry.update();
 
+        //set to RUN_USING_ENCODERS before setting target postion
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
 
+        //resetting encoders everytime might be time consuming, depending on if we are using relative or absolute value
+        //we should be able to not have to reset the encoders and instead calculate newTarget = current+target
         rightFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
         rightBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
         leftFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
@@ -182,10 +189,8 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setTargetPosition(lfTics);
         leftBack.setTargetPosition(lbTics);
 
-        int rfPos = rightFront.getCurrentPosition();
-        int rbPos = rightBack.getCurrentPosition();
-        int lfPos = leftFront.getCurrentPosition();
-        int lbPos = leftBack.getCurrentPosition();
+        int rfPos = rightFront.getCurrentPosition(), rbPos = rightBack.getCurrentPosition();
+        int lfPos = leftFront.getCurrentPosition(), lbPos = leftBack.getCurrentPosition();
 
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -219,12 +224,15 @@ public class MecanumAuto extends LinearOpMode {
             lfPos = leftFront.getCurrentPosition();
             lbPos = leftBack.getCurrentPosition();
 
-            telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
-            telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition()));
-            telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition()));
-            telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition()));
+            telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())+"target: "+String.format("%d", rfTics));
+            telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition())+"target: "+String.format("%d", rbTics));
+            telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition())+"target: "+String.format("%d", lfTics));
+            telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition())+"target: "+String.format("%d", lbTics));
             telemetry.update();
         }
+        //stops setting power to the motors after the target position has been reached
+        //beffore it used to just stop because the loop was exited
+        brake(10);
     }
 
     //Turn method to be written after studying the IMU, first work on robot motion
@@ -255,8 +263,6 @@ public class MecanumAuto extends LinearOpMode {
             //initTime = getRuntime();
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             currentPos = Math.abs(angles.firstAngle);
-
-
 
             double power = Range.clip((Math.abs((currentPos - target) / (100.0)) + i), .3, .7);
 
@@ -314,17 +320,6 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     /**
-     sets the power for each wheel
-     inputs range form -1.0 to 1.0
-     */
-    public void DrivePower(double pow) {
-        leftFront.setPower(pow);
-        leftBack.setPower(pow);
-        rightFront.setPower(pow);
-        rightBack.setPower(pow);
-    }
-
-    /**
      * takes in a specfic speed for each individutal motor
      * Mukilan K. 2020.08.07
      *
@@ -338,6 +333,11 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setPower(lf);
         rightBack.setPower(rb);
         leftBack.setPower(lb);
+    }
+
+    public void brake(int time){
+        powDrive(0.0,0.0,0.0,0.0);
+        sleep(time);
     }
 
     /**
