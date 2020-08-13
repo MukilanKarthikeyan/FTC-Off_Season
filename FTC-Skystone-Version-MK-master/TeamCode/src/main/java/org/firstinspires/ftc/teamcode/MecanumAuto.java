@@ -24,18 +24,17 @@ public class MecanumAuto extends LinearOpMode {
     BNO055IMU imu;
     Orientation angles;
     double globAng;
+    int rfPos, rbPos, lfPos, lbPos;
 
     private final int TICKS = 1120;
 
     @Override
     public void runOpMode() throws InterruptedException {
         //assign each motor to the port in config
-        leftFront = hardwareMap.dcMotor.get("lf");
         rightFront = hardwareMap.dcMotor.get("rf");
-        leftBack = hardwareMap.dcMotor.get("lb");
         rightBack = hardwareMap.dcMotor.get("rb");
-
-
+        leftFront = hardwareMap.dcMotor.get("lf");
+        leftBack = hardwareMap.dcMotor.get("lb");
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -49,6 +48,7 @@ public class MecanumAuto extends LinearOpMode {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
 
         /*
         powDrive(0.6,0.6,-0.6,-0.6);
@@ -112,6 +112,7 @@ public class MecanumAuto extends LinearOpMode {
 
     }
 
+    //this method can be used to test the encoders in the future in case encoders go out of phase
     public void testEncoder(int rev){
         int tics = TICKS*(rev);
         telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
@@ -172,25 +173,25 @@ public class MecanumAuto extends LinearOpMode {
         telemetry.update();
 
         //set to RUN_USING_ENCODERS before setting target postion
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        //resetting encoders everytime might be time consuming, depending on if we are using relative or absolute value
-        //we should be able to not have to reset the encoders and instead calculate newTarget = current+target
-        rightFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
-        rightBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
-        leftFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
-        leftBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         rightFront.setTargetPosition(rfTics);
         rightBack.setTargetPosition(rbTics);
         leftFront.setTargetPosition(lfTics);
         leftBack.setTargetPosition(lbTics);
 
-        int rfPos = rightFront.getCurrentPosition(), rbPos = rightBack.getCurrentPosition();
-        int lfPos = leftFront.getCurrentPosition(), lbPos = leftBack.getCurrentPosition();
+        rfPos = rightFront.getCurrentPosition();
+        rbPos = rightBack.getCurrentPosition();
+        lfPos = leftFront.getCurrentPosition();
+        lbPos = leftBack.getCurrentPosition();
 
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -203,16 +204,16 @@ public class MecanumAuto extends LinearOpMode {
                 (Math.abs(lfPos) < Math.abs(lfTics))|| (Math.abs(lbPos) < Math.abs(lbTics))){
 
             if((Math.abs(rfPos) < Math.abs(rfTics))){
-                rightFront.setPower(rfPow);
+                rightFront.setPower(rfPow*(Math.abs(rfTics)-(Math.abs(rfPos) )/Math.abs(rfTics)));
             }
             if((Math.abs(rbPos) < Math.abs(rbTics))){
-                rightBack.setPower(rbPow);
+                rightBack.setPower(rbPow*(Math.abs(rbTics)-(Math.abs(rbPos))/Math.abs(rbTics));
             }
             if((Math.abs(lfPos) < Math.abs(lfTics))){
-                leftFront.setPower(lfPow);
+                leftFront.setPower(lfPow(Math.abs(lfTics)-(Math.abs(lfPos))/Math.abs(lfTics)));
             }
             if((Math.abs(lbPos) < Math.abs(lbTics))){
-                leftBack.setPower(lbPow);
+                leftBack.setPower(lbPow(Math.abs(lbTics)-(Math.abs(lbPos))/Math.abs(lbTics)));
             }
 
             //unable to use the powDrive method beacue i need to be able to control each of the power of the motors independitly which would
@@ -230,6 +231,12 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition())+"target: "+String.format("%d", lbTics));
             telemetry.update();
         }
+        //need to reset the mode of the motors so that it can work with other methods such as powDrive
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         //stops setting power to the motors after the target position has been reached
         //beffore it used to just stop because the loop was exited
         brake(10);
@@ -242,6 +249,7 @@ public class MecanumAuto extends LinearOpMode {
      * this pivots on the midpoint of the specifide edge
      * however with these cases, if the boolean sideCon is true, it pivots on midpoint of edges,
      * if false pivots on one of the wheels (starting form right front wheel and going clockwise)
+     * 1: right front wheel and labled clockwise
      *
      * @param target: if positive: clockwise if negative: counterclockwise
      *             this method is not motor encoder based, must write it based on an IMU PID loop
