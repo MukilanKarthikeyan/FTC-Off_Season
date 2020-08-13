@@ -109,7 +109,15 @@ public class MecanumAuto extends LinearOpMode {
         freeDrive(0.3, 1,-1,1,-1);
         brake(400);
         */
-        turn(90, true, 1,0.3);
+
+        //turning algorithm works as intended, hower overshoots but about one or two degrees
+        //turn(90, true, 1,0.3);
+
+        freeDrive(0.3, 0.75, 0.75, -0.75, -0.75);
+        brake(400);
+
+        freeDrive(0.3, -0.75, -0.75,0.75,0.75);
+        brake(400);
     }
 
     //this method can be used to test the encoders in the future in case encoders go out of phase
