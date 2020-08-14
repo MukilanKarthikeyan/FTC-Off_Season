@@ -25,6 +25,7 @@ public class MecanumAuto extends LinearOpMode {
     Orientation angles;
     double globAng;
     int rfPos, rbPos, lfPos, lbPos;
+    double rfPow, rbPow, lfPow, lbPow;
 
     private final int TICKS = 1120;
 
@@ -165,12 +166,7 @@ public class MecanumAuto extends LinearOpMode {
         int lfTics = (int)(lfRev*TICKS);
         int lbTics = (int)(lbRev*TICKS);
 
-        //to calculate the sign/diriction of the motor, yes its a long calculation there is posibiltiy for simplicfication
-        //but currently we have not found a better solution
-        double rfPow = (rfRev*pow)/(double)Math.abs(rfRev);
-        double rbPow = (rbRev*pow)/(double)Math.abs(rbRev);
-        double lfPow = (lfRev*pow)/(double)Math.abs(lfRev);
-        double lbPow = (lbRev*pow)/(double)Math.abs(lbRev);
+
         //int tic = (dist/(wheel_diameter))*TICKS;
         //NOTE: rev = dist/(wheel_diameter)
 
@@ -215,23 +211,38 @@ public class MecanumAuto extends LinearOpMode {
         while((Math.abs(rfPos) < Math.abs(rfTics)) || (Math.abs(rbPos) < Math.abs(rbTics))||
                 (Math.abs(lfPos) < Math.abs(lfTics))|| (Math.abs(lbPos) < Math.abs(lbTics))){
 
+            // implement constatant drift correction/ collision compensation using the IMU values
+            //use this same principal for diagonal movemtn, and also use encoder values to see if the tics move, and reserse to compensate
+            //for unnecceray movement
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             double curAng = Math.abs(angles.firstAngle);
+
             if(intAng-curAng!=0){
                 if(curAng-intAng>0){
-                    rfPow -= turnTweak;
-                    rbPow -= turnTweak;
-                    lfPow += turnTweak;
-                    lbPow += turnTweak;
-
-            }
+                    //to calculate the sign/diriction of the motor, yes its a long calculation there is posibiltiy for simplicfication
+                    //but currently we have not found a better solution
+                    rfPow = (rfRev*(pow-turnTweak)/(double)Math.abs(rfRev);
+                    rbPow = (rbRev*(pow-turnTweak))/(double)Math.abs(rbRev);
+                    lfPow = (lfRev*(pow+turnTweak))/(double)Math.abs(lfRev);
+                    lbPow = (lbRev*(pow+turnTweak))/(double)Math.abs(lbRev);
+                }
                 if(intAng-curAng<0){
-                    rfPow += turnTweak;
-                    rbPow += turnTweak;
-                    lfPow -= turnTweak;
-                    lbPow -= turnTweak;
+
+                    //to calculate the sign/diriction of the motor, yes its a long calculation there is posibiltiy for simplicfication
+                    //but currently we have not found a better solution
+                    rfPow = (rfRev*(pow+turnTweak)/(double)Math.abs(rfRev);
+                    rbPow = (rbRev*(pow+turnTweak))/(double)Math.abs(rbRev);
+                    lfPow = (lfRev*(pow-turnTweak))/(double)Math.abs(lfRev);
+                    lbPow = (lbRev*(pow-turnTweak))/(double)Math.abs(lbRev);
                 }
             }
+            else{
+                rfPow = (rfRev*(pow)/(double)Math.abs(rfRev);
+                rbPow = (rbRev*(pow))/(double)Math.abs(rbRev);
+                lfPow = (lfRev*(pow))/(double)Math.abs(lfRev);
+                lbPow = (lbRev*(pow))/(double)Math.abs(lbRev);
+            }
+
 
             if((Math.abs(rfPos) < Math.abs(rfTics))){
                 rightFront.setPower(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos) )/(double)Math.abs(rfTics)));
@@ -245,11 +256,6 @@ public class MecanumAuto extends LinearOpMode {
             if((Math.abs(lbPos) < Math.abs(lbTics))){
                 leftBack.setPower(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)));
             }
-
-
-            // implement constatant drift correction/ collision compensation using the IMU values
-            //use this same principal for diagonal movemtn, and also use encoder values to see if the tics move, and reserse to compensate
-            //for unnecceray movement
 
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
@@ -274,12 +280,8 @@ public class MecanumAuto extends LinearOpMode {
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double endAng = Math.abs(angles.firstAngle);
-        if((endAng-intAng)>0){
-            turn(endAng-intAng, false, 0, 0.3);
-        }
-        else{
-            turn(intAng-endAng, true, 0, 0.3);
-        }
+        turn(endAng-intAng, !(endAng-intAng), 0, 0.3);
+
     }
 
     //Turn method to be written after studying the IMU, first work on robot motion
