@@ -111,7 +111,7 @@ public class MecanumAuto extends LinearOpMode {
         */
 
         //turning algorithm works as intended, hower overshoots but about one or two degrees
-        //turn(90, true, 1,0.3);
+        //turn(90, true, 1, 0.3);
 
         freeDrive(0.3, 0.75, 0.75, -0.75, -0.75);
         brake(400);
@@ -209,10 +209,29 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        double turnTweak = 0.1;
         //while loop must use || because when using && if a revolution of 0 is given to one motor, the statement
         //short ciruits and stops, but the || allows to run each motor at individual revolutions
         while((Math.abs(rfPos) < Math.abs(rfTics)) || (Math.abs(rbPos) < Math.abs(rbTics))||
                 (Math.abs(lfPos) < Math.abs(lfTics))|| (Math.abs(lbPos) < Math.abs(lbTics))){
+
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            double curAng = Math.abs(angles.firstAngle);
+            if(intAng-curAng!=0){
+                if(curAng-intAng>0){
+                    rfPow -= turnTweak;
+                    rbPow -= turnTweak;
+                    lfPow += turnTweak;
+                    lbPow += turnTweak;
+
+            }
+                if(intAng-curAng<0){
+                    rfPow += turnTweak;
+                    rbPow += turnTweak;
+                    lfPow -= turnTweak;
+                    lbPow -= turnTweak;
+                }
+            }
 
             if((Math.abs(rfPos) < Math.abs(rfTics))){
                 rightFront.setPower(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos) )/(double)Math.abs(rfTics)));
@@ -227,9 +246,10 @@ public class MecanumAuto extends LinearOpMode {
                 leftBack.setPower(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)));
             }
 
-            //unable to use the powDrive method beacue i need to be able to control each of the power of the motors independitly which would
-            //require me to write 4 seperate lines of code
-            //powDrive(rfPow, rbPow, lfPow, lbPow);
+
+            // implement constatant drift correction/ collision compensation using the IMU values
+            //use this same principal for diagonal movemtn, and also use encoder values to see if the tics move, and reserse to compensate
+            //for unnecceray movement
 
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
@@ -260,7 +280,6 @@ public class MecanumAuto extends LinearOpMode {
         else{
             turn(intAng-endAng, true, 0, 0.3);
         }
-
     }
 
     //Turn method to be written after studying the IMU, first work on robot motion
