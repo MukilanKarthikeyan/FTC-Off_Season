@@ -324,7 +324,7 @@ public class MecanumAuto extends LinearOpMode {
                     lfPow = (lfRev*(pow+turnTweak))/(double)Math.abs(lfRev);
                     lbPow = (lbRev*(pow+turnTweak))/(double)Math.abs(lbRev);
                 }
-                if(initAng-curAng<0){
+                else{
 
                     //to calculate the sign/diriction of the motor, yes its a long calculation there is posibiltiy for simplicfication
                     //but currently we have not found a better solution
@@ -410,16 +410,22 @@ public class MecanumAuto extends LinearOpMode {
         double i = 0;
 
         double initialPos = angles.firstAngle;
+        double Kp, Ki, , Kd, pre_error;
+        double error;
 
         while (opModeIsActive() && ((Math.abs(target) - Math.abs(currentPos)) > 0)) {
-            //initTime = getRuntime();
+            initTime = getRuntime();
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             currentPos = Math.abs(angles.firstAngle);
 
+            error = (Math.abs(target) - Math.abs(currentPos));
+            double correction = (Kp*error) + i +(Kd*(error-pre_error));
+
             //pow = Range.clip(pow*(Math.abs((currentPos - Math.abs(target)) / (100.0)) + i), -0.7, .7);
 
+
             telemetry.addData("Current Position: ", currentPos);
-            telemetry.addData("Distance to go: ", (Math.abs(target) - Math.abs(currentPos)));
+            telemetry.addData("Distance to go: ", error);
             telemetry.update();
 
             if(sideCon) {
@@ -458,7 +464,6 @@ public class MecanumAuto extends LinearOpMode {
                 }
             }
 
-            /*
             deltaTime = getRuntime() - initTime;
 
             if (Math.abs(currentPos - target) < 30)
@@ -466,7 +471,7 @@ public class MecanumAuto extends LinearOpMode {
 
             if (i > 0.3) {
                 i = 0.3;
-            }*/
+            }
         }
     }
 
