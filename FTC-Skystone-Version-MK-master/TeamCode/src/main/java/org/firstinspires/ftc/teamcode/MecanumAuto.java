@@ -28,7 +28,7 @@ public class MecanumAuto extends LinearOpMode {
     double rfPow, rbPow, lfPow, lbPow;
     double rfScalPow, rbScalPow, lfScalPow, lbScalPow;
     double initTime, deltaTime;
-    double Kp = 0.001, Ki = 0.001, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
+    double Kp = 0.1, Ki = 0.001, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
 
     private final int TICKS = 1120;
 
@@ -327,14 +327,12 @@ public class MecanumAuto extends LinearOpMode {
             //use this same principal for diagonal movemtn, and also use encoder values to see if the tics move, and reserse to compensate
             //for unnecceray movement
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            double curAng = Math.abs(angles.firstAngle);
+            double curAng = angles.firstAngle;
 
             initTime = getRuntime();
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            curAng = Math.abs(angles.firstAngle);
             double target = 0;
             double error = curAng - target;
-            double correction = (Kp*Math.abs(error)) + i + d;
+            double correction = (Kp*error);
 
 
             if((Math.abs(rfPos) < Math.abs(rfTics))){
@@ -358,16 +356,16 @@ public class MecanumAuto extends LinearOpMode {
             rbPos = rightBack.getCurrentPosition();
             lfPos = leftFront.getCurrentPosition();
             lbPos = leftBack.getCurrentPosition();
-
+            /*
             deltaTime = getRuntime() - initTime;
             if (Math.abs(error) < 30)
-                i += Ki * Math.abs(error) * deltaTime;
+                i += Ki * error * deltaTime;
 
             if (i > 0.3) {
                 i = 0.3;
             }
-            d = (Kd*(Math.abs(error)-pre_error));
-
+            d = (Kd*(error-pre_error)/deltaTime);*/
+            pre_error = error;
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                     + " target: " + String.format("%d", rfTics)
                     + " power: " + Double.toString(Math.round(rfScalPow*100)/100.0));
@@ -382,6 +380,10 @@ public class MecanumAuto extends LinearOpMode {
                     + " power: " + Double.toString(Math.round(lbScalPow*100)/100.0));
             telemetry.addData("5", "intial angle: " + Double.toString(initAng));
             telemetry.addData("6", "current angle: " + Double.toString(curAng));
+            telemetry.addData("7", "error: ", Double.toString(error));
+            //telemetry.addData("8", "p: ", Double.toString((Kp*error)));
+            //telemetry.addData("9", "i: ", Double.toString(i));
+            //telemetry.addData("10", "d: ", Double.toString(d));
             telemetry.update();
         }
         //need to reset the mode of the motors so that it can work with other methods such as powDrive
@@ -419,7 +421,7 @@ public class MecanumAuto extends LinearOpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double initialPos = angles.firstAngle;
 
-        double currAng = Math.abs(angles.firstAngle);
+        double currAng = angles.firstAngle;
 
         double error = offset - Math.abs(target);
         pow = (target*pow)/(Math.abs(target));
