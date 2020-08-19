@@ -14,8 +14,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-
-import java.util.Arrays;
+import java.util.*;
 @Autonomous
 public class MecanumAuto extends LinearOpMode {
 
@@ -28,7 +27,7 @@ public class MecanumAuto extends LinearOpMode {
     double rfPow, rbPow, lfPow, lbPow;
     double rfScalPow, rbScalPow, lfScalPow, lbScalPow;
     double initTime, deltaTime;
-    double Kp = 0.1, Ki = 0.001, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
+    double Kp = 0.01, Ki = 0.01, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
 
     private final int TICKS = 1120;
 
@@ -81,9 +80,9 @@ public class MecanumAuto extends LinearOpMode {
         //freeDrive(0.3, -1, -1,1,1);
         //brake(1000);
 
-        drive(0.3, 1, 1, -1, -1);
+        drive(0.3, 1, 1, -1, -1,0);
         brake(500);
-        drive(0.3, -1, -1,1,1);
+        drive(0.3, -1, -1,1,1,0);
         brake(500);
         //freeDrive(0.2, 0.75, 0.75, -0.75, -0.75);
         //brake(400);
@@ -258,7 +257,7 @@ public class MecanumAuto extends LinearOpMode {
      * @param lfRev: number of revolutions for the left front motor
      * @param lbRev: number of revolutions for the left back motor
      */
-    public void drive(double pow, double rfRev, double rbRev, double lfRev,double lbRev){
+    public void drive(double pow, double rfRev, double rbRev, double lfRev,double lbRev, double target){
         //need to change to a distace parameter
         //so for the parameters are the number of revolutions for each motor, but with future testing and aditional methods
         //which will make this freeDrive method a helper one, we can program based on distance rather than revolutions
@@ -329,11 +328,10 @@ public class MecanumAuto extends LinearOpMode {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             double curAng = angles.firstAngle;
 
-            initTime = getRuntime();
-            double target = 0;
+            //initTime = getRuntime();
+            //double target = 0;
             double error = curAng - target;
             double correction = (Kp*error);
-
 
             if((Math.abs(rfPos) < Math.abs(rfTics))){
                 rfScalPow =Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction;
@@ -364,6 +362,7 @@ public class MecanumAuto extends LinearOpMode {
             if (i > 0.3) {
                 i = 0.3;
             }
+
             d = (Kd*(error-pre_error)/deltaTime);*/
             pre_error = error;
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
@@ -380,10 +379,8 @@ public class MecanumAuto extends LinearOpMode {
                     + " power: " + Double.toString(Math.round(lbScalPow*100)/100.0));
             telemetry.addData("5", "intial angle: " + Double.toString(initAng));
             telemetry.addData("6", "current angle: " + Double.toString(curAng));
-            telemetry.addData("7", "error: ", Double.toString(error));
-            //telemetry.addData("8", "p: ", Double.toString((Kp*error)));
-            //telemetry.addData("9", "i: ", Double.toString(i));
-            //telemetry.addData("10", "d: ", Double.toString(d));
+            telemetry.addData("7", "error: " + Double.toString(error));
+            telemetry.addData("8", "correction: " + Double.toString(correction));
             telemetry.update();
         }
         //need to reset the mode of the motors so that it can work with other methods such as powDrive
@@ -514,13 +511,24 @@ public class MecanumAuto extends LinearOpMode {
         sleep(time);
     }
 
+    public void drivePolar(double ang, double dist){
+        double y = pow*dist*Math.Sin(ang);
+        double x = pow*dist*Math.Cos(ang);
+        //the turn is going to be found form the acceleration vector and with calculating orientation
+        double rfval = y - x + turn;
+        double rbval = y + x + turn;
+        double lfval = -y - x + turn;
+        double lbval = -y + x + turn;
+    }
+
+
     /**
      drivePolar method takes in an input of distance, angle, and boolean mainatin orentaion(mainOr)
      if mainOr is true, then robot does not turn, if false robot turns and moves forward
      NOTE: since its holonomic, assign an integer to each side of the robot (easer to work with in the future
      depending on attachments and use a waterfall conditional)
      */
-    public void drivePolar(double dist, double angle, boolean mainOr, double pow){
+    public void trigMove(double dist, double angle, boolean mainOr, double pow){
         //Calculate Horizontal Movement
         double X_move = dist*Math.cos(angle);
 
