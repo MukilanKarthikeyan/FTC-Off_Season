@@ -80,10 +80,10 @@ public class MecanumAuto extends LinearOpMode {
         //freeDrive(0.3, -1, -1,1,1);
         //brake(1000);
 
-        drive(0.3, 1, 1, -1, -1,0);
-        brake(500);
-        drive(0.3, -1, -1,1,1,0);
-        brake(500);
+        freeDrive(0.3, 0.5, 0.5, -0.5, -0.5);
+        brake(1000);
+        freeDrive(0.3, -0.5, -0.5, 0.5, 0.5);
+        brake(1000);
         //freeDrive(0.2, 0.75, 0.75, -0.75, -0.75);
         //brake(400);
 
@@ -113,8 +113,7 @@ public class MecanumAuto extends LinearOpMode {
     }
 
     /**
-     * exactly like the drive method but but
-     * the freeDrive method does not have a drifint correction applied to it
+     * freedrive is just for testing new drive variations
      *
      * @param pow: takes in the power that each motor will be set to
      * @param rfRev: number of revolutions for the right front motor
@@ -132,19 +131,15 @@ public class MecanumAuto extends LinearOpMode {
         int lfTics = (int)(lfRev*TICKS);
         int lbTics = (int)(lbRev*TICKS);
 
-        //to calculate the sign/diriction of the motor, yes its a long calculation there is posibiltiy for simplicfication
-        //but currently we have not found a better solution
-        double rfPow = (rfRev*pow)/(double)Math.abs(rfRev);
-        double rbPow = (rbRev*pow)/(double)Math.abs(rbRev);
-        double lfPow = (lfRev*pow)/(double)Math.abs(lfRev);
-        double lbPow = (lbRev*pow)/(double)Math.abs(lbRev);
+        rfPow = (rfRev*(pow))/(double)Math.abs(rfRev);
+        rbPow = (rbRev*(pow))/(double)Math.abs(rbRev);
+        lfPow = (lfRev*(pow))/(double)Math.abs(lfRev);
+        lbPow = (lbRev*(pow))/(double)Math.abs(lbRev);
 
-        double rfScalPow = 0, rbScalPow = 0, lfScalPow = 0, lbScalPow = 0;
-
-        //int tic = (dist/(wheel_diameter))*TICKS;
-        //NOTE: rev = dist/(wheel_diameter)
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double initAng = Math.abs(angles.firstAngle);
+        //int tic = (dist/(wheel_diameter))*TICKS;
+        //NOTE: rev = dist/(wheel_diameter)
 
         telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                 + " target: " + String.format("%d", rfTics));
@@ -156,6 +151,9 @@ public class MecanumAuto extends LinearOpMode {
                 + " target: "+String.format("%d", lbTics));
         telemetry.addData("5", "intial angle: " + Double.toString(initAng));
         telemetry.update();
+
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        initAng = Math.abs(angles.firstAngle);
 
         //set to RUN_USING_ENCODERS before setting target postion
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -183,40 +181,42 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        //while loop must use || because when using && if a revolution of 0 is given to one motor, the statement
-        //short ciruits and stops, but the || allows to run each motor at individual revolutions
-        while((Math.abs(rfPos) < Math.abs(rfTics)) || (Math.abs(rbPos) < Math.abs(rbTics))||
-                (Math.abs(lfPos) < Math.abs(lfTics))|| (Math.abs(lbPos) < Math.abs(lbTics))){
+        //short circuts, testing to see if it ever curves whens stoping
+        while((Math.abs(rfPos) < Math.abs(rfTics)) && (Math.abs(rbPos) < Math.abs(rbTics))&&
+                (Math.abs(lfPos) < Math.abs(lfTics))&& (Math.abs(lbPos) < Math.abs(lbTics))){
 
-            //make a scaleing helper method, for simplicity
+            // implement constatant drift correction/ collision compensation using the IMU values
+            //use this same principal for diagonal movemtn, and also use encoder values to see if the tics move, and reserse to compensate
+            //for unnecceray movement
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            double curAng = angles.firstAngle;
+
+            //initTime = getRuntime();
+            double target = 0;
+            double error = curAng - target;
+            double correction = (Kp*error);
+
             if((Math.abs(rfPos) < Math.abs(rfTics))){
-                rfScalPow = 0.5*Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos) )/(double)Math.abs(rfTics)),-pow,pow);
+                rfScalPow =Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction;
                 rightFront.setPower(rfScalPow);
             }
             if((Math.abs(rbPos) < Math.abs(rbTics))){
-                rbScalPow = 0.5*Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow);
+                rbScalPow = Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction;
                 rightBack.setPower(rbScalPow);
             }
             if((Math.abs(lfPos) < Math.abs(lfTics))){
-                lfScalPow = 0.5*Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow);
+                lfScalPow = Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction;
                 leftFront.setPower(lfScalPow);
             }
             if((Math.abs(lbPos) < Math.abs(lbTics))){
-                lbScalPow = 0.5*Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow);
+                lbScalPow = Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction;
                 leftBack.setPower(lbScalPow);
             }
-
-            //unable to use the powDrive method beacue i need to be able to control each of the power of the motors independitly which would
-            //require me to write 4 seperate lines of code
-            //powDrive(rfPow, rbPow, lfPow, lbPow);
 
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
             lfPos = leftFront.getCurrentPosition();
             lbPos = leftBack.getCurrentPosition();
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            double curAng = Math.abs(angles.firstAngle);
 
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                     + " target: " + String.format("%d", rfTics)
@@ -232,6 +232,8 @@ public class MecanumAuto extends LinearOpMode {
                     + " power: " + Double.toString(Math.round(lbScalPow*100)/100.0));
             telemetry.addData("5", "intial angle: " + Double.toString(initAng));
             telemetry.addData("6", "current angle: " + Double.toString(curAng));
+            telemetry.addData("7", "error: " + Double.toString(error));
+            telemetry.addData("8", "correction: " + Double.toString(correction));
             telemetry.update();
         }
         //need to reset the mode of the motors so that it can work with other methods such as powDrive
@@ -240,9 +242,8 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        //stops setting power to the motors after the target position has been reached
-        //beffore it used to just stop because the loop was exited
         brake(100);
+
     }
 
     /**
@@ -363,8 +364,8 @@ public class MecanumAuto extends LinearOpMode {
                 i = 0.3;
             }
 
-            d = (Kd*(error-pre_error)/deltaTime);*/
-            pre_error = error;
+            d = (Kd*(error-pre_error)/deltaTime);
+            pre_error = error;*/
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                     + " target: " + String.format("%d", rfTics)
                     + " power: " + Double.toString(Math.round(rfScalPow*100)/100.0));
@@ -511,14 +512,18 @@ public class MecanumAuto extends LinearOpMode {
         sleep(time);
     }
 
-    public void drivePolar(double ang, double dist){
-        double y = pow*dist*Math.Sin(ang);
-        double x = pow*dist*Math.Cos(ang);
+    public void drivePolar(double ang, double rotat, double pow){
+        double yPow = pow*Math.sin(ang);
+        double xPow = pow*Math.cos(ang);
+        double turn = 0;
+        //for every 1 motor ratation, the wheel rotates 3 times, thus traveling 36 inches or 3 feet
         //the turn is going to be found form the acceleration vector and with calculating orientation
-        double rfval = y - x + turn;
-        double rbval = y + x + turn;
-        double lfval = -y - x + turn;
-        double lbval = -y + x + turn;
+        //this is not a field centric code just yet, we would do that in a loop and then recalculate the power each time with an offest.
+        //with this we will also be able to move in circles by just changing the angles as time/distance changes
+        double rfval = yPow - xPow + turn;
+        double rbval = yPow + xPow + turn;
+        double lfval = -yPow - xPow + turn;
+        double lbval = -yPow + xPow + turn;
     }
 
 
