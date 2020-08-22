@@ -65,25 +65,22 @@ public class MecanumAuto extends LinearOpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
         waitForStart();
-        /*
-        freeDrive(0.3, 0.5, 0.5, -0.5, -0.5);
-        brake(1000);
-        freeDrive(0.3, -0.5, -0.5, 0.5, 0.5);
-        brake(1000);
-        freeDrive(0.2, 0.75, 0.75, -0.75, -0.75);
+
+        drive(0.3, 1, 1, -1, -1, 0.0);
         brake(400);
-        */
+        drive(0.3, -1, 1, -1, 1, 0.0);
+        brake(400);
+        drive(0.3, 1, 1, -1, -1, 0.0);
+        brake(400);
+        drive(0.2, 1, -1, 1, -1, 0.0);
+        brake(400);
+
 
         //drivePolar(45,1,0.3,0);
         //powDrive(0.0,0.6,-0.6,0.0);
         //sleep(1000);
-        //joyRide(-1.0,-0.3);'
-        for(int i = 0; i<5; i++){
-            drive(0.3,1.0,1.0,-1.0,-1.0,0.0);
-            brake(750);
-            drive(0.3,-1.0,-1.0,1.0,1.0,0.0);
-            brake(750);
-        }
+        //joyRide(-1.0,-0.3);
+
 
     }
 
@@ -412,29 +409,33 @@ public class MecanumAuto extends LinearOpMode {
             double error = curAng - target;
             double correction = (Kp*error);
 
-            if((Math.abs(rfPos) < Math.abs(rfTics))){
-                rfScalPow =Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction;
-                //rightFront.setPower(rfScalPow);
-            }else{ rfScalPow = 0.0; }
-            if((Math.abs(rbPos) < Math.abs(rbTics))){
-                rbScalPow = Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction;
-                //rightBack.setPower(rbScalPow);
-            }else{ rbScalPow = 0.0; }
-            if((Math.abs(lfPos) < Math.abs(lfTics))){
-                lfScalPow = Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction;
-                //leftFront.setPower(lfScalPow);
-            }else{ lfScalPow = 0.0; }
-            if((Math.abs(lbPos) < Math.abs(lbTics))){
-                lbScalPow = Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction;
-                //leftBack.setPower(lbScalPow);
-            }else{ lbScalPow = 0.0; }
-
-            powDrive(rfScalPow,rbScalPow,lfScalPow,lbScalPow);
-
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
             lfPos = leftFront.getCurrentPosition();
             lbPos = leftBack.getCurrentPosition();
+
+            if((Math.abs(rfPos) != Math.abs(rfTics))){
+                rfScalPow = ((Math.abs(rfTics)-Math.abs(rfPos))/(Math.abs((Math.abs(rfTics)-Math.abs(rfPos))))) *
+                        (Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction);
+            }else{ rfScalPow = 0.0; }
+
+            if((Math.abs(rbPos) != Math.abs(rbTics))){
+                rbScalPow = ((Math.abs(rbTics)-Math.abs(rbPos))/(Math.abs((Math.abs(rbTics)-Math.abs(rbPos))))) *
+                        (Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction);
+            }else{ rbScalPow = 0.0; }
+
+            if((Math.abs(lfPos) != Math.abs(lfTics))){
+                lfScalPow = ((Math.abs(lfTics)-Math.abs(lfPos))/(Math.abs((Math.abs(lfTics)-Math.abs(lfPos))))) *
+                        (Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction);
+            }else{ lfScalPow = 0.0; }
+
+            if((Math.abs(lbPos) != Math.abs(lbTics))){
+                lbScalPow = ((Math.abs(lbTics)-Math.abs(lbPos))/(Math.abs((Math.abs(lbTics)-Math.abs(lbPos))))) *
+                        (Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction);
+            }else{ lbScalPow = 0.0; }
+
+            powDrive(rfScalPow,rbScalPow,lfScalPow,lbScalPow);
+
             /*
             deltaTime = getRuntime() - initTime;
             if (Math.abs(error) < 30){ i += Ki * error * deltaTime;}
