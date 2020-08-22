@@ -25,6 +25,7 @@ public class MecanumAuto extends LinearOpMode {
     double globAng;
     int rfPos, rbPos, lfPos, lbPos;
     double rfPow, rbPow, lfPow, lbPow;
+    double rfRev, rbRev, lfRev, lbRev;
     double rfScalPow, rbScalPow, lfScalPow, lbScalPow;
     double initTime, deltaTime;
     double Kp = 0.01, Ki = 0.01, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
@@ -38,6 +39,17 @@ public class MecanumAuto extends LinearOpMode {
         rightBack = hardwareMap.dcMotor.get("rb");
         leftFront = hardwareMap.dcMotor.get("lf");
         leftBack = hardwareMap.dcMotor.get("lb");
+
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -65,14 +77,9 @@ public class MecanumAuto extends LinearOpMode {
         //drivePolar(45,1,0.3,0);
         //powDrive(0.0,0.6,-0.6,0.0);
         //sleep(1000);
+        joyRide(-1.0,-0.3);
+        brake(750);
 
-        for(int i = 0; i<5; i++){
-
-            drive(0.3, -1.5, 1.5, -1.5, 1.5, 0.0);
-            brake(500);
-            drive(0.3, 1.5, -1.5, 1.5, -1.5, 0.0);
-            brake(750);
-        }
 
     }
 
@@ -86,7 +93,7 @@ public class MecanumAuto extends LinearOpMode {
         rightFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
 
         rightFront.setTargetPosition(-tics);
-        int rfPos = rightFront.getCurrentPosition();
+        rfPos = rightFront.getCurrentPosition();
 
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         while(Math.abs(rfPos) < Math.abs(tics)){
@@ -98,7 +105,50 @@ public class MecanumAuto extends LinearOpMode {
 
 
     }
+    public void joyRide(double rev, double power){
+        int tics = (int)(TICKS*rev);
 
+        telemetry.addData("1", "rfMotor encoder:" + String.format("%d", rightFront.getCurrentPosition()));
+        telemetry.addData("2", "rbMotor encoder:" + String.format("%d", rightBack.getCurrentPosition()));
+        telemetry.addData("3", "lfMotor encoder:" + String.format("%d", leftFront.getCurrentPosition()));
+        telemetry.addData("4", "lbMotor encoder:" + String.format("%d", leftBack.getCurrentPosition()));
+        telemetry.update();
+
+
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+
+        rightFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
+
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+
+        rfPos = rightFront.getCurrentPosition();
+        rbPos = rightBack.getCurrentPosition();
+        lfPos = leftFront.getCurrentPosition();
+        lbPos = leftBack.getCurrentPosition();
+
+        while(Math.abs(rfPos) < Math.abs(tics)){
+            powDrive(power,power,-power,-power);
+
+            rfPos = rightFront.getCurrentPosition();
+            rbPos = rightBack.getCurrentPosition();
+            lfPos = leftFront.getCurrentPosition();
+            lbPos = leftBack.getCurrentPosition();
+            telemetry.addData("1", "rfMotor encoder:" + String.format("%d", rightFront.getCurrentPosition()));
+            telemetry.addData("2", "rbMotor encoder:" + String.format("%d", rightBack.getCurrentPosition()));
+            telemetry.addData("3", "lfMotor encoder:" + String.format("%d", leftFront.getCurrentPosition()));
+            telemetry.addData("4", "lbMotor encoder:" + String.format("%d", leftBack.getCurrentPosition()));
+            telemetry.update();
+        }
+    }
     /**
      * freedrive is just for testing new drive variations
      *
@@ -108,7 +158,7 @@ public class MecanumAuto extends LinearOpMode {
      * @param lfRev: number of revolutions for the left front motor
      * @param lbRev: number of revolutions for the left back motor
      */
-    public void freeDrive(double pow, int xy, double rev, boolean endCor){
+    public void testDrive(double pow, int xy, double rev, boolean endCor, double target){
         //need to change to a distace parameter
         //so for the parameters are the number of revolutions for each motor, but with future testing and aditional methods
         //which will make this freeDrive method a helper one, we can program based on distance rather than revolutions
@@ -333,20 +383,15 @@ public class MecanumAuto extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        rightFront.setTargetPosition(rfTics);
-        rightBack.setTargetPosition(rbTics);
-        leftFront.setTargetPosition(lfTics);
-        leftBack.setTargetPosition(lbTics);
-
         rfPos = rightFront.getCurrentPosition();
         rbPos = rightBack.getCurrentPosition();
         lfPos = leftFront.getCurrentPosition();
         lbPos = leftBack.getCurrentPosition();
 
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
 
         //while loop must use || because when using && if a revolution of 0 is given to one motor, the statement
         //short ciruits and stops, but the || allows to run each motor at individual revolutions
