@@ -77,9 +77,13 @@ public class MecanumAuto extends LinearOpMode {
         //drivePolar(45,1,0.3,0);
         //powDrive(0.0,0.6,-0.6,0.0);
         //sleep(1000);
-        joyRide(-1.0,-0.3);
-        brake(750);
-
+        //joyRide(-1.0,-0.3);'
+        for(int i = 0; i<5; i++){
+            drive(0.3,1.0,1.0,-1.0,-1.0,0.0);
+            brake(750);
+            drive(0.3,-1.0,-1.0,1.0,1.0,0.0);
+            brake(750);
+        }
 
     }
 
@@ -392,7 +396,6 @@ public class MecanumAuto extends LinearOpMode {
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
-
         //while loop must use || because when using && if a revolution of 0 is given to one motor, the statement
         //short ciruits and stops, but the || allows to run each motor at individual revolutions
         while((Math.abs(rfPos) < Math.abs(rfTics)) || (Math.abs(rbPos) < Math.abs(rbTics))||
