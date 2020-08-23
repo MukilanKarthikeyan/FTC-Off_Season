@@ -687,22 +687,27 @@ public class MecanumAuto extends LinearOpMode {
             lfPos = leftFront.getCurrentPosition();
             lbPos = leftBack.getCurrentPosition();
 
-            if((Math.abs(rfPos) < Math.abs(rfTics))){
-                rfScalPow =Range.clip(rfval*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction;
-                rightFront.setPower(rfScalPow);
-            }
-            if((Math.abs(rbPos) < Math.abs(rbTics))){
-                rbScalPow = Range.clip(rbval*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction;
-                rightBack.setPower(rbScalPow);
-            }
-            if((Math.abs(lfPos) < Math.abs(lfTics))){
-                lfScalPow = Range.clip(lfval*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction;
-                leftFront.setPower(lfScalPow);
-            }
-            if((Math.abs(lbPos) < Math.abs(lbTics))){
-                lbScalPow = Range.clip(lbval*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction;
-                leftBack.setPower(lbScalPow);
-            }
+            if((Math.abs(rfPos) != Math.abs(rfTics))){
+                rfScalPow = ((Math.abs(rfTics)-Math.abs(rfPos))/(Math.abs((Math.abs(rfTics)-Math.abs(rfPos))))) *
+                        (Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction);
+            }else{ rfScalPow = 0.0; }
+
+            if((Math.abs(rbPos) != Math.abs(rbTics))){
+                rbScalPow = ((Math.abs(rbTics)-Math.abs(rbPos))/(Math.abs((Math.abs(rbTics)-Math.abs(rbPos))))) *
+                        (Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction);
+            }else{ rbScalPow = 0.0; }
+
+            if((Math.abs(lfPos) != Math.abs(lfTics))){
+                lfScalPow = ((Math.abs(lfTics)-Math.abs(lfPos))/(Math.abs((Math.abs(lfTics)-Math.abs(lfPos))))) *
+                        (Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction);
+            }else{ lfScalPow = 0.0; }
+
+            if((Math.abs(lbPos) != Math.abs(lbTics))){
+                lbScalPow = ((Math.abs(lbTics)-Math.abs(lbPos))/(Math.abs((Math.abs(lbTics)-Math.abs(lbPos))))) *
+                        (Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction);
+            }else{ lbScalPow = 0.0; }
+
+            powDrive(rfScalPow,rbScalPow,lfScalPow,lbScalPow);
 
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                     + " target: " + String.format("%d", rfTics)
