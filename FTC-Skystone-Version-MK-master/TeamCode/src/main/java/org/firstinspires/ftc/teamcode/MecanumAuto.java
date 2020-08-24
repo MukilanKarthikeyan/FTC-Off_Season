@@ -408,7 +408,7 @@ public class MecanumAuto extends LinearOpMode {
             //double target = 0;
             double error = curAng - target;
             double correction = (Kp*error);
-
+            //double encodeer_Error_Correction = same as the scal Pow calculation
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
             lfPos = leftFront.getCurrentPosition();
@@ -604,21 +604,15 @@ public class MecanumAuto extends LinearOpMode {
         // double rbcal = pow*Math.sin(ang+45);
         // double lfval = -pow*Math.sin(ang-45);
         // double lbval = -pow*Math.sin(ang-45)
+        /*
+        I do not need to calcualte the power, I will just calcualte te distance and roations and base wheel motion based on that
 
         double rfval = pow*(y - x);
         double rbval = pow*(y + x);
         double lfval = pow*(-y - x);
         double lbval = pow*(-y + x);
-
+        */
         double rfRot = yDist - xDist + turn;
-        double rbRot = yDist + xDist + turn;
-        double lfRot = -yDist - xDist + turn;
-        double lbRot = -yDist + xDist + turn;
-
-
-        int rfTics = (int)(rfRot*TICKS);
-        int rbTics = (int)(rbRot*TICKS);
-        int lfTics = (int)(lfRot*TICKS);
         int lbTics = (int)(lbRot*TICKS);
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
@@ -628,6 +622,13 @@ public class MecanumAuto extends LinearOpMode {
 
         telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                 + " target: " + String.format("%d", rfTics));
+        double rbRot = yDist + xDist + turn;
+        double lfRot = -yDist - xDist + turn;
+        double lbRot = -yDist + xDist + turn;
+
+        int rfTics = (int)(rfRot*TICKS);
+        int rbTics = (int)(rbRot*TICKS);
+        int lfTics = (int)(lfRot*TICKS);
         telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition())
                 + " target: "+String.format("%d", rbTics));
         telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition())
