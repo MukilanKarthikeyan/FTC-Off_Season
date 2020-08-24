@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.teamcode.Vectors;
 import java.util.*;
 @Autonomous
 public class MecanumAuto extends LinearOpMode {
@@ -29,6 +30,8 @@ public class MecanumAuto extends LinearOpMode {
     double rfScalPow, rbScalPow, lfScalPow, lbScalPow;
     double initTime, deltaTime;
     double Kp = 0.01, Ki = 0.01, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
+    Vector currentPoint;
+
 
     private final int TICKS = 1120;
 
@@ -39,6 +42,11 @@ public class MecanumAuto extends LinearOpMode {
         rightBack = hardwareMap.dcMotor.get("rb");
         leftFront = hardwareMap.dcMotor.get("lf");
         leftBack = hardwareMap.dcMotor.get("lb");
+
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -106,6 +114,7 @@ public class MecanumAuto extends LinearOpMode {
 
 
     }
+
     public void joyRide(double rev, double power){
         int tics = (int)(TICKS*rev);
 
@@ -114,12 +123,6 @@ public class MecanumAuto extends LinearOpMode {
         telemetry.addData("3", "lfMotor encoder:" + String.format("%d", leftFront.getCurrentPosition()));
         telemetry.addData("4", "lbMotor encoder:" + String.format("%d", leftBack.getCurrentPosition()));
         telemetry.update();
-
-
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODERS);
 
         rightFront.setMode(DcMotor.RunMode.RESET_ENCODERS);
         rightBack.setMode(DcMotor.RunMode.RESET_ENCODERS);
@@ -150,6 +153,7 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.update();
         }
     }
+
     /**
      * freedrive is just for testing new drive variations
      *
@@ -373,12 +377,6 @@ public class MecanumAuto extends LinearOpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         initAng = Math.abs(angles.firstAngle);
 
-        //set to RUN_USING_ENCODERS before setting target postion
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -478,19 +476,16 @@ public class MecanumAuto extends LinearOpMode {
 
     //Turn method to be written after studying the IMU, first work on robot motion
     /**
-     * if edge is 0 then it pivots about the center
-     * for edges 1-4
-     * this pivots on the midpoint of the specifide edge
-     * however with these cases, if the boolean sideCon is true, it pivots on midpoint of edges,
-     * if false pivots on one of the wheels (starting form right front wheel and going clockwise)
-     * 1: right front wheel and labled clockwise
      *
      * @param target: if positive: clockwise if negative: counterclockwise
      *             this method is not motor encoder based, must write it based on an IMU PID loop
-     * @param edge: 0 is center, side 1 is the front, sides are labled clockwise
+     * @param edge: parameter for determing the pivot point of the robot
+     *            0: center of mass
+     *            1-4; edgdes starging form front going clockwise
+     *            5-8: wheels startings form right front going clockwise
      * @param pow: if positive -> anitclockwise, if pow is regative -> clockwise
      */
-    public void turn(double target, boolean sideCon, int edge, double pow){
+    public void turn(double target, int edge, double pow){
         double  offset = 90;
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double initialPos = angles.firstAngle;
@@ -508,53 +503,46 @@ public class MecanumAuto extends LinearOpMode {
             error = currAng - Math.abs(target);
             double correction = (Kp*Math.abs(error)) + i + d;
 
-            //pow = Range.clip(pow*(Math.abs((curAng - Math.abs(target)) / (100.0)) + i), -0.7, .7);
-
+            pow = Range.clip(pow*(Math.abs((curAng - Math.abs(target)) / (100.0)) + i), -0.7, .7);
 
             telemetry.addData("Current Position: ", currAng);
             telemetry.addData("Distance to go: ", error);
             telemetry.update();
 
             PIDpow = pow + correction;
-            if(sideCon) {
-                switch (edge) {
-                    case 0:
-                        powDrive(pow, pow, pow, pow);
-                        break;
-                    case 1:
-                        powDrive(0.0, pow, 0.0, pow);
-                        break;
-                    case 2:
-                        powDrive(0.0, 0.0, pow, pow);
-                        break;
-                    case 3:
-                        powDrive(pow, 0.0, pow, 0.0);
-                        break;
-                    case 4:
-                        powDrive(pow, pow, 0.0, 0.0);
-                        break;
-                }
-            }
-            else{
-                switch(edge){
-                    case 1:
-                        powDrive(0.0, pow, pow, pow);
-                        break;
-                    case 2:
-                        powDrive(pow,0.0,pow,pow);
-                        break;
-                    case 3:
-                        powDrive(pow, pow,0.0, pow);
-                        break;
-                    case 4:
-                        powDrive(pow, pow, pow, 0.0);
-                        break;
-                }
+            switch (edge) {
+                case 0:
+                    powDrive(pow, pow, pow, pow);
+                    break;
+                case 1:
+                    powDrive(0.0, pow, 0.0, pow);
+                    break;
+                case 2:
+                    powDrive(0.0, 0.0, pow, pow);
+                    break;
+                case 3:
+                    powDrive(pow, 0.0, pow, 0.0);
+                    break;
+                case 4:
+                    powDrive(pow, pow, 0.0, 0.0);
+                    break;
+                case 5:
+                    powDrive(0.0, pow, pow, pow);
+                    break;
+                case 6:
+                    powDrive(pow,0.0,pow,pow);
+                    break;
+                case 7:
+                    powDrive(pow, pow,0.0, pow);
+                    break;
+                case 8:
+                    powDrive(pow, pow, pow, 0.0);
+                    break;
             }
             deltaTime = getRuntime() - initTime;
-            if (Math.abs(error) < 30)
+            if (Math.abs(error) < 30) {
                 i += Ki * Math.abs(error) * deltaTime;
-
+            }
             if (i > 0.3) {
                 i = 0.3;
             }
@@ -588,12 +576,35 @@ public class MecanumAuto extends LinearOpMode {
         sleep(time);
     }
 
-    public void drivePolar(double ang, double dist, double pow, double target){
-        double y = Math.sin((ang/180)*Math.PI);
-        double x = Math.cos((ang/100)*Math.PI);
+    /**
+     *
+     * @param ang, is a double type, angle of movement,
+     * @param dist
+     * @param pow
+     */
+    public void driveVector(double ang, double dist, double pow){
+        double yDist = dist*Math.sin(Math.toRadians(ang));
+        double xDist = dist*Math.cos(Math.toRadians(ang));
         double turn = 0;
-        double yDist = dist*Math.sin(ang);
-        double xDist = dist*Math.cos(ang);
+        double target = 0;
+
+        //wheel diameter is 4in so circumfrecne is around 12in, gear ratio is 3:1
+        //might want to make that a public variable later
+        double rfRot = (yDist - xDist + turn)/36;
+        double rbRot = (yDist + xDist + turn)/36;
+        double lfRot = (-yDist - xDist + turn)/36;
+        double lbRot = (-yDist + xDist + turn)/36;
+
+        int rfTics = (int)(rfRot*TICKS);
+        int rbTics = (int)(rbRot*TICKS);
+        int lfTics = (int)(lfRot*TICKS);
+        int lbTics = (int)(lbRot*TICKS);
+
+        rfPow = (rfTics*(pow))/(double)Math.abs(rfTics);
+        rbPow = (rbTics*(pow))/(double)Math.abs(rbTics);
+        lfPow = (lfTics*(pow))/(double)Math.abs(lfTics);
+        lbPow = (lbTics*(pow))/(double)Math.abs(lbTics);
+
 
         //for every 1 motor ratation, the wheel rotates 3 times, thus traveling 36 inches or 3 feet
         //the turn is going to be found form the acceleration vector and with calculating orientation
@@ -612,8 +623,6 @@ public class MecanumAuto extends LinearOpMode {
         double lfval = pow*(-y - x);
         double lbval = pow*(-y + x);
         */
-        double rfRot = yDist - xDist + turn;
-        int lbTics = (int)(lbRot*TICKS);
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double initAng = Math.abs(angles.firstAngle);
@@ -622,13 +631,6 @@ public class MecanumAuto extends LinearOpMode {
 
         telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                 + " target: " + String.format("%d", rfTics));
-        double rbRot = yDist + xDist + turn;
-        double lfRot = -yDist - xDist + turn;
-        double lbRot = -yDist + xDist + turn;
-
-        int rfTics = (int)(rfRot*TICKS);
-        int rbTics = (int)(rbRot*TICKS);
-        int lfTics = (int)(lfRot*TICKS);
         telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition())
                 + " target: "+String.format("%d", rbTics));
         telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition())
@@ -726,10 +728,9 @@ public class MecanumAuto extends LinearOpMode {
                     + " target: "+String.format("%d", lbTics)
                     + " power: " + Double.toString(Math.round(lbScalPow*100)/100.0)
                     + " raw power: " + Double.toString(Math.round(lbval*100)/100.0));
-            telemetry.addData("5", "intial angle: " + Double.toString(initAng));
-            telemetry.addData("6", "current angle: " + Double.toString(curAng));
-            telemetry.addData("7", "error: " + Double.toString(error));
-            telemetry.addData("8", "correction: " + Double.toString(correction));
+            telemetry.addData("5", "intial angle: " + Double.toString(initAng) + "current angle: " + Double.toString(curAng));
+            telemetry.addData("6", "error: " + Double.toString(error));
+            telemetry.addData("7", "correction: " + Double.toString(correction));
             telemetry.update();
         }
         //need to reset the mode of the motors so that it can work with other methods such as powDrive
@@ -749,22 +750,6 @@ public class MecanumAuto extends LinearOpMode {
      NOTE: since its holonomic, assign an integer to each side of the robot (easer to work with in the future
      depending on attachments and use a waterfall conditional)
      */
-    public void trigMove(double dist, double angle, boolean mainOr, double pow){
-        //Calculate Horizontal Movement
-        double X_move = dist*Math.cos(angle);
-
-        //Calculate Veritcal movement
-        double Y_move = dist*Math.sin(angle);
-        //initially we need to test the movemnt by breaking down the movement vector into its x and y components
-
-        //no need to check for refernce angle when maintaing Orentaion, works like graphing in Polar coordinates
-        if(mainOr){
-            teLogic(X_move, Y_move);
-        }
-        //else statement deals with if you want to turn and drive forward
-        //slightly complicated as we need to accomedate for large turns using reference angles
-
-    }
 
     /*
     placeholer drive method
