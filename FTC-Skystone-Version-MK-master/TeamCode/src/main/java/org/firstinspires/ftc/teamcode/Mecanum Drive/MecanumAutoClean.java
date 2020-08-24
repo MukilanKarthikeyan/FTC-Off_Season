@@ -14,7 +14,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+//import org.firstinspires.ftc.teamcode.Vectors;
 import java.util.*;
+
 @Autonomous
 public class MecanumAuto extends LinearOpMode {
 
@@ -28,7 +30,8 @@ public class MecanumAuto extends LinearOpMode {
     double rfRev, rbRev, lfRev, lbRev;
     double rfScalPow, rbScalPow, lfScalPow, lbScalPow;
     double initTime, deltaTime;
-    double Kp = 0.01, Ki = 0.01, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
+    double Kp = 0.02, Ki = 0.01, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
+    Vector currentPoint;
 
     private final int TICKS = 1120;
 
@@ -40,6 +43,11 @@ public class MecanumAuto extends LinearOpMode {
         leftFront = hardwareMap.dcMotor.get("lf");
         leftBack = hardwareMap.dcMotor.get("lb");
 
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -49,6 +57,7 @@ public class MecanumAuto extends LinearOpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -64,6 +73,21 @@ public class MecanumAuto extends LinearOpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
         waitForStart();
+        for(int i = 0; i<5;i++){
+            drive(0.3, 1, 1, -1, -1, 0.0);
+            brake(400);
+            //drive(0.3, -1, 1, -1, 1, 0.0);
+            //brake(400);
+            drive(0.3, -1, -1, 1, 1, 0.0);
+            brake(400);
+            //drive(0.2, 1, -1, 1, -1, 0.0);
+            //brake(400);
+        }
+        //drivePolar(45,1,0.3,0);
+        //powDrive(0.0,0.6,-0.6,0.0);
+        //sleep(1000);
+        //joyRide(-1.0,-0.3);
+
 
     }
 
@@ -94,6 +118,8 @@ public class MecanumAuto extends LinearOpMode {
         lfPow = (lfRev*(pow))/(double)Math.abs(lfRev);
         lbPow = (lbRev*(pow))/(double)Math.abs(lbRev);
 
+        double rfDir, rbDir, lfDir, lbDir;
+
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double initAng = Math.abs(angles.firstAngle);
         //int tic = (dist/(wheel_diameter))*TICKS;
@@ -112,12 +138,6 @@ public class MecanumAuto extends LinearOpMode {
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         initAng = Math.abs(angles.firstAngle);
-
-        //set to RUN_USING_ENCODERS before setting target postion
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -146,41 +166,34 @@ public class MecanumAuto extends LinearOpMode {
 
             //initTime = getRuntime();
             //double target = 0;
-            double error = curAng - target;
+            double error = curAng - initAng;
             double correction = (Kp*error);
-
+            //double encodeer_Error_Correction = same as the scal Pow calculation
             rfPos = rightFront.getCurrentPosition();
             rbPos = rightBack.getCurrentPosition();
             lfPos = leftFront.getCurrentPosition();
             lbPos = leftBack.getCurrentPosition();
 
-            if((Math.abs(rfPos) > Math.abs(rfTics))){
-                rfScalPow = -1 * (Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction);
-            }
-            if((Math.abs(rfPos) < Math.abs(rfTics))){
-                rfScalPow = Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction;
+            rfDir = ((Math.abs(rfTics)-Math.abs(rfPos))/(Math.abs((Math.abs(rfTics)-Math.abs(rfPos)))));
+            rbDir = ((Math.abs(rbTics)-Math.abs(rbPos))/(Math.abs((Math.abs(rbTics)-Math.abs(rbPos)))));
+            lfDir = ((Math.abs(lfTics)-Math.abs(lfPos))/(Math.abs((Math.abs(lfTics)-Math.abs(lfPos)))));
+            lbDir = ((Math.abs(lbTics)-Math.abs(lbPos))/(Math.abs((Math.abs(lbTics)-Math.abs(lbPos)))))
+
+            if((Math.abs(rfPos) != Math.abs(rfTics))){
+                rfScalPow = rfDir * (Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow))-(rfDircorrection);
             }else{ rfScalPow = 0.0; }
 
-            if((Math.abs(rbPos) > Math.abs(rbTics))){
-                rbScalPow = -1 * (Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction);
-            }
-            if((Math.abs(rbPos) < Math.abs(rbTics))){
-                rbScalPow = Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction;
+            if((Math.abs(rbPos) != Math.abs(rbTics))){
+                rbScalPow = rbDir * (Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow))-(rbDircorrection);
             }else{ rbScalPow = 0.0; }
 
-            if((Math.abs(lfPos) > Math.abs(lfTics))){
-                lfScalPow = -1 * (Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction);
-            }
-            if((Math.abs(lfPos) < Math.abs(lfTics))){
-                lfScalPow = Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction;
+            if((Math.abs(lfPos) != Math.abs(lfTics))){
+                lfScalPow = lfDir * (Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow))-(lfDir*correction);
             }else{ lfScalPow = 0.0; }
 
-            if((Math.abs(lbPos) < Math.abs(lbTics))){
-                lbScalPow = -1 * (Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction);
-            }
-            if((Math.abs(lbPos) < Math.abs(lbTics))){
-                lbScalPow = Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction;
-            } else{ lbScalPow = 0.0; }
+            if((Math.abs(lbPos) != Math.abs(lbTics))){
+                lbScalPow = lbDir * (Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow))-(lbDir*correction);
+            }else{ lbScalPow = 0.0; }
 
             powDrive(rfScalPow,rbScalPow,lfScalPow,lbScalPow);
 
@@ -216,29 +229,26 @@ public class MecanumAuto extends LinearOpMode {
 
         //stops setting power to the motors after the target position has been reached
         //beffore it used to just stop because the loop was exited
-        brake(100);
+
         //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //double endAng = Math.abs(angles.firstAngle);
-        //turn(endAng-initAng, ((endAng-initAng)<0), 0, 0.3);
-        //brake(100);
+        //turn(endAng-initAng, 0, 0.3);
+        brake(100);
 
     }
 
     //Turn method to be written after studying the IMU, first work on robot motion
     /**
-     * if edge is 0 then it pivots about the center
-     * for edges 1-4
-     * this pivots on the midpoint of the specifide edge
-     * however with these cases, if the boolean sideCon is true, it pivots on midpoint of edges,
-     * if false pivots on one of the wheels (starting form right front wheel and going clockwise)
-     * 1: right front wheel and labled clockwise
      *
      * @param target: if positive: clockwise if negative: counterclockwise
      *             this method is not motor encoder based, must write it based on an IMU PID loop
-     * @param edge: 0 is center, side 1 is the front, sides are labled clockwise
+     * @param edge: parameter for determing the pivot point of the robot
+     *            0: center of mass
+     *            1-4; edgdes starging form front going clockwise
+     *            5-8: wheels startings form right front going clockwise
      * @param pow: if positive -> anitclockwise, if pow is regative -> clockwise
      */
-    public void turn(double target, boolean sideCon, int edge, double pow){
+    public void turn(double target, int edge, double pow){
         double  offset = 90;
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double initialPos = angles.firstAngle;
@@ -256,53 +266,46 @@ public class MecanumAuto extends LinearOpMode {
             error = currAng - Math.abs(target);
             double correction = (Kp*Math.abs(error)) + i + d;
 
-            //pow = Range.clip(pow*(Math.abs((curAng - Math.abs(target)) / (100.0)) + i), -0.7, .7);
-
+            pow = Range.clip(pow*(Math.abs((currAng - Math.abs(target)) / (100.0)) + i), -0.7, .7);
 
             telemetry.addData("Current Position: ", currAng);
             telemetry.addData("Distance to go: ", error);
             telemetry.update();
 
             PIDpow = pow + correction;
-            if(sideCon) {
-                switch (edge) {
-                    case 0:
-                        powDrive(pow, pow, pow, pow);
-                        break;
-                    case 1:
-                        powDrive(0.0, pow, 0.0, pow);
-                        break;
-                    case 2:
-                        powDrive(0.0, 0.0, pow, pow);
-                        break;
-                    case 3:
-                        powDrive(pow, 0.0, pow, 0.0);
-                        break;
-                    case 4:
-                        powDrive(pow, pow, 0.0, 0.0);
-                        break;
-                }
-            }
-            else{
-                switch(edge){
-                    case 1:
-                        powDrive(0.0, pow, pow, pow);
-                        break;
-                    case 2:
-                        powDrive(pow,0.0,pow,pow);
-                        break;
-                    case 3:
-                        powDrive(pow, pow,0.0, pow);
-                        break;
-                    case 4:
-                        powDrive(pow, pow, pow, 0.0);
-                        break;
-                }
+            switch (edge) {
+                case 0:
+                    powDrive(pow, pow, pow, pow);
+                    break;
+                case 1:
+                    powDrive(0.0, pow, 0.0, pow);
+                    break;
+                case 2:
+                    powDrive(0.0, 0.0, pow, pow);
+                    break;
+                case 3:
+                    powDrive(pow, 0.0, pow, 0.0);
+                    break;
+                case 4:
+                    powDrive(pow, pow, 0.0, 0.0);
+                    break;
+                case 5:
+                    powDrive(0.0, pow, pow, pow);
+                    break;
+                case 6:
+                    powDrive(pow,0.0,pow,pow);
+                    break;
+                case 7:
+                    powDrive(pow, pow,0.0, pow);
+                    break;
+                case 8:
+                    powDrive(pow, pow, pow, 0.0);
+                    break;
             }
             deltaTime = getRuntime() - initTime;
-            if (Math.abs(error) < 30)
+            if (Math.abs(error) < 30) {
                 i += Ki * Math.abs(error) * deltaTime;
-
+            }
             if (i > 0.3) {
                 i = 0.3;
             }
@@ -335,5 +338,4 @@ public class MecanumAuto extends LinearOpMode {
         powDrive(0.0,0.0,0.0,0.0);
         sleep(time);
     }
-
 }

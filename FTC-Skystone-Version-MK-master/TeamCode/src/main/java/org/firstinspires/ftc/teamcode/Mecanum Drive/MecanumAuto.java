@@ -14,8 +14,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.teamcode.Vectors;
+//import org.firstinspires.ftc.teamcode.Vectors;
 import java.util.*;
+
 @Autonomous
 public class MecanumAuto extends LinearOpMode {
 
@@ -29,9 +30,8 @@ public class MecanumAuto extends LinearOpMode {
     double rfRev, rbRev, lfRev, lbRev;
     double rfScalPow, rbScalPow, lfScalPow, lbScalPow;
     double initTime, deltaTime;
-    double Kp = 0.01, Ki = 0.01, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
+    double Kp = 0.02, Ki = 0.01, i = 0, Kd = 0.001, d = 0, pre_error = 0, PIDpow;
     Vector currentPoint;
-
 
     private final int TICKS = 1120;
 
@@ -73,16 +73,14 @@ public class MecanumAuto extends LinearOpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
         waitForStart();
-
         drive(0.3, 1, 1, -1, -1, 0.0);
         brake(400);
         drive(0.3, -1, 1, -1, 1, 0.0);
         brake(400);
-        drive(0.3, 1, 1, -1, -1, 0.0);
+        drive(0.3, -1, -1, 1, 1, 0.0);
         brake(400);
         drive(0.2, 1, -1, 1, -1, 0.0);
         brake(400);
-
 
         //drivePolar(45,1,0.3,0);
         //powDrive(0.0,0.6,-0.6,0.0);
@@ -104,6 +102,7 @@ public class MecanumAuto extends LinearOpMode {
         rightFront.setTargetPosition(-tics);
         rfPos = rightFront.getCurrentPosition();
 
+        //this is abad idea, it has abuilt in PID which messes up mecanum wheels
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         while(Math.abs(rfPos) < Math.abs(tics)){
             rightFront.setPower(0.1);
@@ -111,8 +110,6 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition()));
             telemetry.update();
         }
-
-
     }
 
     public void joyRide(double rev, double power){
@@ -326,7 +323,7 @@ public class MecanumAuto extends LinearOpMode {
         if(endCor){
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             double endAng = Math.abs(angles.firstAngle);
-            turn(endAng-initAng, ((endAng-initAng)<0), 0, 0.3);
+            turn(endAng-initAng, 0, 0.3);
             brake(100);
         }
     }
@@ -357,6 +354,8 @@ public class MecanumAuto extends LinearOpMode {
         rbPow = (rbRev*(pow))/(double)Math.abs(rbRev);
         lfPow = (lfRev*(pow))/(double)Math.abs(lfRev);
         lbPow = (lbRev*(pow))/(double)Math.abs(lbRev);
+
+        double rfDir, rbDir, lfDir, lbDir;
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double initAng = Math.abs(angles.firstAngle);
@@ -404,7 +403,7 @@ public class MecanumAuto extends LinearOpMode {
 
             //initTime = getRuntime();
             //double target = 0;
-            double error = curAng - target;
+            double error = curAng - initAng;
             double correction = (Kp*error);
             //double encodeer_Error_Correction = same as the scal Pow calculation
             rfPos = rightFront.getCurrentPosition();
@@ -412,24 +411,25 @@ public class MecanumAuto extends LinearOpMode {
             lfPos = leftFront.getCurrentPosition();
             lbPos = leftBack.getCurrentPosition();
 
+            rfDir = ((Math.abs(rfTics)-Math.abs(rfPos))/(Math.abs((Math.abs(rfTics)-Math.abs(rfPos)))));
+            rbDir = ((Math.abs(rbTics)-Math.abs(rbPos))/(Math.abs((Math.abs(rbTics)-Math.abs(rbPos)))));
+            lfDir = ((Math.abs(lfTics)-Math.abs(lfPos))/(Math.abs((Math.abs(lfTics)-Math.abs(lfPos)))));
+            lbDir = ((Math.abs(lbTics)-Math.abs(lbPos))/(Math.abs((Math.abs(lbTics)-Math.abs(lbPos)))));
+
             if((Math.abs(rfPos) != Math.abs(rfTics))){
-                rfScalPow = ((Math.abs(rfTics)-Math.abs(rfPos))/(Math.abs((Math.abs(rfTics)-Math.abs(rfPos))))) *
-                        (Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow)-correction);
+                rfScalPow = rfDir * (Range.clip(rfPow*((double)Math.abs(rfTics)-(double)(Math.abs(rfPos))/(double)Math.abs(rfTics)),-pow,pow))-(rfDir*correction);
             }else{ rfScalPow = 0.0; }
 
             if((Math.abs(rbPos) != Math.abs(rbTics))){
-                rbScalPow = ((Math.abs(rbTics)-Math.abs(rbPos))/(Math.abs((Math.abs(rbTics)-Math.abs(rbPos))))) *
-                        (Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow)-correction);
+                rbScalPow = rbDir * (Range.clip(rbPow*((double)Math.abs(rbTics)-(double)(Math.abs(rbPos))/(double)Math.abs(rbTics)),-pow,pow))-(rbDir*correction);
             }else{ rbScalPow = 0.0; }
 
             if((Math.abs(lfPos) != Math.abs(lfTics))){
-                lfScalPow = ((Math.abs(lfTics)-Math.abs(lfPos))/(Math.abs((Math.abs(lfTics)-Math.abs(lfPos))))) *
-                        (Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow)-correction);
+                lfScalPow = lfDir * (Range.clip(lfPow*((double)Math.abs(lfTics)-(double)(Math.abs(lfPos))/(double)Math.abs(lfTics)),-pow,pow))-(lfDir*correction);
             }else{ lfScalPow = 0.0; }
 
             if((Math.abs(lbPos) != Math.abs(lbTics))){
-                lbScalPow = ((Math.abs(lbTics)-Math.abs(lbPos))/(Math.abs((Math.abs(lbTics)-Math.abs(lbPos))))) *
-                        (Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow)-correction);
+                lbScalPow = lbDir * (Range.clip(lbPow*((double)Math.abs(lbTics)-(double)(Math.abs(lbPos))/(double)Math.abs(lbTics)),-pow,pow))-(lbDir*correction);
             }else{ lbScalPow = 0.0; }
 
             powDrive(rfScalPow,rbScalPow,lfScalPow,lbScalPow);
@@ -466,11 +466,11 @@ public class MecanumAuto extends LinearOpMode {
 
         //stops setting power to the motors after the target position has been reached
         //beffore it used to just stop because the loop was exited
-        brake(100);
+
         //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //double endAng = Math.abs(angles.firstAngle);
-        //turn(endAng-initAng, ((endAng-initAng)<0), 0, 0.3);
-        //brake(100);
+        //turn(endAng-initAng, 0, 0.3);
+        brake(100);
 
     }
 
@@ -503,7 +503,7 @@ public class MecanumAuto extends LinearOpMode {
             error = currAng - Math.abs(target);
             double correction = (Kp*Math.abs(error)) + i + d;
 
-            pow = Range.clip(pow*(Math.abs((curAng - Math.abs(target)) / (100.0)) + i), -0.7, .7);
+            pow = Range.clip(pow*(Math.abs((currAng - Math.abs(target)) / (100.0)) + i), -0.7, .7);
 
             telemetry.addData("Current Position: ", currAng);
             telemetry.addData("Distance to go: ", error);
@@ -709,19 +709,19 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("1", "motorRightFront: " + String.format("%d", rightFront.getCurrentPosition())
                     + " target: " + String.format("%d", rfTics)
                     + " power: " + Double.toString(Math.round(rfScalPow*100)/100.0)
-                    + " raw power: " + Double.toString(Math.round(rfval*100)/100.0));
+                    + " raw power: " + Double.toString(Math.round(rfPow*100)/100.0));
             telemetry.addData("2", "motorRightFront: " + String.format("%d", rightBack.getCurrentPosition())
                     + " target: "+String.format("%d", rbTics)
                     + " power: " + Double.toString(Math.round(rbScalPow*100)/100.0)
-                    + " raw power: " + Double.toString(Math.round(rbval*100)/100.0));
+                    + " raw power: " + Double.toString(Math.round(rbPow*100)/100.0));
             telemetry.addData("3", "motorRightFront: " + String.format("%d", leftFront.getCurrentPosition())
                     + " target: "+String.format("%d", lfTics)
                     + " power: " + Double.toString(Math.round(lfScalPow*100)/100.0)
-                    + " raw power: " + Double.toString(Math.round(lfval*100)/100.0));
+                    + " raw power: " + Double.toString(Math.round(lfPow*100)/100.0));
             telemetry.addData("4", "motorRightFront: " + String.format("%d", leftBack.getCurrentPosition())
                     + " target: "+String.format("%d", lbTics)
                     + " power: " + Double.toString(Math.round(lbScalPow*100)/100.0)
-                    + " raw power: " + Double.toString(Math.round(lbval*100)/100.0));
+                    + " raw power: " + Double.toString(Math.round(lbPow*100)/100.0));
             telemetry.addData("5", "intial angle: " + Double.toString(initAng) + "current angle: " + Double.toString(curAng));
             telemetry.addData("6", "error: " + Double.toString(error));
             telemetry.addData("7", "correction: " + Double.toString(correction));
